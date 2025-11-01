@@ -15,14 +15,14 @@ from ui.pages.existing_flashcard_page import ExistingFlashcard
 
 # Import our visual classes
 from ui.visual.animations import SidebarAnimations
-from ui.visual.styles.styles import get_sidebar_styles
+from ui.visual.styles.styles import get_sidebar_styles, get_main_window_styles
 
 class MainWindow(QWidget):
     def __init__(self):
         super().__init__()
         self.sidebar_collapsed = True
-        self.styles = get_sidebar_styles()
-        
+        self.sidebar_styles = get_sidebar_styles()
+        self.main_styles = get_main_window_styles()
         self.setup_ui()
         self.setup_animation()
         
@@ -31,12 +31,13 @@ class MainWindow(QWidget):
         main_layout = QHBoxLayout()
         main_layout.setContentsMargins(0, 0, 0, 0)
         main_layout.setSpacing(0)
-        
+        self.setStyleSheet(self.main_styles["main_layout"])       
+
         # Create sidebar as a solid frame/box
         self.sidebar = QFrame()
         self.sidebar.setMinimumWidth(0)  # Start collapsed
         self.sidebar.setMaximumWidth(0)
-        self.sidebar.setStyleSheet(self.styles["sidebar_collapsed"])
+        self.sidebar.setStyleSheet(self.sidebar_styles["sidebar_collapsed"])
         
         self.setup_sidebar_content()
         
@@ -49,7 +50,7 @@ class MainWindow(QWidget):
         # Create and add burger button to main content
         self.toggle_btn = QPushButton("☰")
         self.toggle_btn.setFixedSize(45, 45)
-        self.toggle_btn.setStyleSheet(self.styles["toggle_button"])
+        self.toggle_btn.setStyleSheet(self.sidebar_styles["toggle_button"])
         self.toggle_btn.clicked.connect(self.toggle_sidebar)
         
         # Create stacked widget for main app pages
@@ -81,7 +82,7 @@ class MainWindow(QWidget):
         for i, text in enumerate(nav_texts):
             btn = QPushButton(text)  # Show text immediately
             btn.setFixedHeight(40)
-            btn.setStyleSheet(self.styles["nav_button_expanded"])
+            btn.setStyleSheet(self.sidebar_styles["nav_button_expanded"])
             btn.clicked.connect(lambda checked, idx=i: self.navigate_to_page(idx))
             self.nav_buttons.append(btn)
             sidebar_layout.addWidget(btn)
@@ -98,12 +99,13 @@ class MainWindow(QWidget):
         self.all_cards_page = AllCards()
         self.create_flashcard_page = CreateFlashcard(self)
         self.existing_flashcard_page = ExistingFlashcard(self)
+
         
         self.pages_stack.addWidget(self.home_page)         # index 0
         self.pages_stack.addWidget(self.profile_page)      # index 1
         self.pages_stack.addWidget(self.settings_page)     # index 2
-        self.pages_stack.addWidget(self.help_page)         # index 3
-        self.pages_stack.addWidget(self.all_cards_page)    # index 4
+        self.pages_stack.addWidget(self.all_cards_page)    # index 3
+        self.pages_stack.addWidget(self.help_page)          # index 4
         self.pages_stack.addWidget(self.create_flashcard_page) # index 5
         self.pages_stack.addWidget(self.existing_flashcard_page) # index 6
     
@@ -119,13 +121,13 @@ class MainWindow(QWidget):
     
     def expand_sidebar(self):
         # Apply expanded styles and expand the sidebar box
-        self.sidebar.setStyleSheet(self.styles["sidebar_expanded"])
+        self.sidebar.setStyleSheet(self.sidebar_styles["sidebar_expanded"])
         self.sidebar_animations.expand_sidebar(0, 200)
         self.sidebar_collapsed = False
     
     def collapse_sidebar(self):
         # Apply collapsed styles and collapse the sidebar box
-        self.sidebar.setStyleSheet(self.styles["sidebar_collapsed"])
+        self.sidebar.setStyleSheet(self.sidebar_styles["sidebar_collapsed"])
         self.sidebar_animations.collapse_sidebar(200, 0)
         self.sidebar_collapsed = True
     
