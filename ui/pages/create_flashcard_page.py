@@ -26,6 +26,7 @@ class CreateFlashcard(QWidget):
         self.scroll_area.setWidgetResizable(True)
         self.scroll_area.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
         self.scroll_area.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        self.scroll_area.setStyleSheet(self.styles["scroll_area"])
         
         # Content widget that goes inside the scroll area
         self.scroll_content = QWidget()
@@ -93,7 +94,6 @@ class CreateFlashcard(QWidget):
             self.add_flashcard_input()
 
     def add_flashcard_input(self):
-        #Add a new flashcard input section to the scroll area
         # Create card container frame
         card_frame = QFrame()
         card_frame.setStyleSheet(self.styles["card_frame"])
@@ -146,11 +146,28 @@ class CreateFlashcard(QWidget):
             self.flashcards = []
             set_name = self.name_input.text().strip()
             
-            # Validate set name
+            # Validate set name - CORRECT WAY
             if not set_name:
-                QMessageBox.warning(self, "Missing Set Name", "Please enter a name for your flashcard set.")
+                missing_set_warning = QMessageBox(self)
+                missing_set_warning.setWindowTitle("Missing Set Name")
+                missing_set_warning.setText("Please enter a name for your flashcard set.")
+                missing_set_warning.setStyleSheet(self.styles["warning_message_box"])
+                missing_set_warning.setIcon(QMessageBox.Icon.Warning)
+                missing_set_warning.setStandardButtons(QMessageBox.StandardButton.Ok)
+                
+                # Load custom icon
+                icon_path = get_asset_path("warning_icon.png")  
+                custom_icon = QPixmap(icon_path)
+                
+                if not custom_icon.isNull():
+                    missing_set_warning.setIconPixmap(custom_icon.scaled(74, 74, Qt.AspectRatioMode.KeepAspectRatio))
+                else:
+                    missing_set_warning.setIcon(QMessageBox.Icon.Information)
+                
+                missing_set_warning.setStandardButtons(QMessageBox.StandardButton.Ok)
+                missing_set_warning.exec()
                 return
-            
+        
             # Loop through all card frames and collect data
             for i in range(self.scroll_layout.count() - 1):
                 item = self.scroll_layout.itemAt(i)
@@ -171,7 +188,24 @@ class CreateFlashcard(QWidget):
             
             # Validate we have at least one flashcard
             if not self.flashcards:
-                QMessageBox.warning(self, "No Flashcards", "Please fill in at least one flashcard.")
+                no_flashcard_warning = QMessageBox(self)
+                no_flashcard_warning.setWindowTitle("No Flashcards ")
+                no_flashcard_warning.setText("Please fill in at least one flashcard.")
+                no_flashcard_warning.setStyleSheet(self.styles["warning_message_box"])
+                no_flashcard_warning.setIcon(QMessageBox.Icon.Warning)
+                no_flashcard_warning.setStandardButtons(QMessageBox.StandardButton.Ok)
+                    
+                # Load custom icon  
+                icon_path = get_asset_path("warning_icon.png")  
+                custom_icon = QPixmap(icon_path)
+                
+                if not custom_icon.isNull():
+                    no_flashcard_warning.setIconPixmap(custom_icon.scaled(74, 74, Qt.AspectRatioMode.KeepAspectRatio))
+                else:
+                    no_flashcard_warning.setIcon(QMessageBox.Icon.Information)
+                    
+                no_flashcard_warning.setStandardButtons(QMessageBox.StandardButton.Ok)
+                no_flashcard_warning.exec()
                 return
             
             # Use controller to save the flashcard set
@@ -179,17 +213,50 @@ class CreateFlashcard(QWidget):
             controller = FlashcardController()
             error_message = controller.create_flashcard_set(set_name, self.flashcards)
             
-            # Check if save was successful
             if error_message:
-                QMessageBox.critical(self, "Save Error", f"Failed to save flashcard set:\n{error_message}")
+                save_error_warning = QMessageBox(self)
+                save_error_warning.setWindowTitle("Save Error")
+                save_error_warning.setText(f"Failed to save flashcard set:\n{error_message}")
+                save_error_warning.setStyleSheet(self.styles["warning_message_box"])
+                save_error_warning.setIcon(QMessageBox.Icon.Warning)
+                save_error_warning.setStandardButtons(QMessageBox.StandardButton.Ok)
+                
+                # Load custom icon
+                icon_path = get_asset_path("warning_icon.png")  
+                custom_icon = QPixmap(icon_path)
+                
+                if not custom_icon.isNull():
+                    save_error_warning.setIconPixmap(custom_icon.scaled(74, 74, Qt.AspectRatioMode.KeepAspectRatio))
+                else:
+                    save_error_warning.setIcon(QMessageBox.Icon.Information)
+                
+                save_error_warning.setStandardButtons(QMessageBox.StandardButton.Ok)
+                save_error_warning.exec()
             else:
-                # CUSTOM SUCCESS MESSAGE BOX
+                # SUCCESS MESSAGE BOX
                 self.show_save_success(set_name, len(self.flashcards))
                 self.clear_form()
                 self.name_input.clear()
-                
+
         except Exception as e:
-            QMessageBox.critical(self, "Critical Error", f"The app encountered an error:\n{str(e)}")
+            critical_error_warning = QMessageBox(self)
+            critical_error_warning.setWindowTitle("Critical Error")
+            critical_error_warning.setText(f"The app encountered an error:\n{str(e)}")
+            critical_error_warning.setStyleSheet(self.styles["warning_message_box"])
+            critical_error_warning.setIcon(QMessageBox.Icon.Warning)
+            critical_error_warning.setStandardButtons(QMessageBox.StandardButton.Ok)
+            
+            # Load custom icon
+            icon_path = get_asset_path("warning_icon.png")  
+            custom_icon = QPixmap(icon_path)
+            
+            if not custom_icon.isNull():
+                critical_error_warning.setIconPixmap(custom_icon.scaled(74, 74, Qt.AspectRatioMode.KeepAspectRatio))
+            else:
+                critical_error_warning.setIcon(QMessageBox.Icon.Information)
+            
+            critical_error_warning.setStandardButtons(QMessageBox.StandardButton.Ok)
+            critical_error_warning.exec()
 
     def show_save_success(self, set_name, card_count):
 
@@ -228,11 +295,8 @@ class CreateFlashcard(QWidget):
                         widget.answer_input.clear()
 
     def go_back(self):
-        """Show confirmation dialog with custom icon"""
-        from PyQt6.QtWidgets import QMessageBox
-        from PyQt6.QtGui import QPixmap
-        from utils.path_helper import get_asset_path
-        
+        #Show confirmation dialog with custom icon
+    
         msg_box = QMessageBox(self)
         msg_box.setWindowTitle("Confirm Cancel")
         msg_box.setText("Are you sure you want to cancel?")
@@ -242,11 +306,11 @@ class CreateFlashcard(QWidget):
         msg_box.setStyleSheet(self.styles["warning_message_box"])
         
         # Load custom icon using path helper
-        icon_path = get_asset_path("!.png")
+        icon_path = get_asset_path("warning_icon.png")
         custom_icon = QPixmap(icon_path)
         
         if not custom_icon.isNull():
-            msg_box.setIconPixmap(custom_icon.scaled(64, 64, Qt.AspectRatioMode.KeepAspectRatio))
+            msg_box.setIconPixmap(custom_icon.scaled(84, 84, Qt.AspectRatioMode.KeepAspectRatio))
         else:
             msg_box.setIcon(QMessageBox.Icon.Warning)
         

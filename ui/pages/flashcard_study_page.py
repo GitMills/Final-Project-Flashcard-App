@@ -12,6 +12,10 @@ class FlashcardStudyPage(QWidget):
         self.current_card_index = 0
         self.is_flipped = False
         self.styles = get_study_page_styles()
+        
+        # Simple progress tracking
+        self.card_progress = {}  # Track correct counts per card
+        
         self.setup_ui()
         if self.flashcard_set and self.flashcard_set['cards']:
             self.load_card(0)
@@ -45,7 +49,7 @@ class FlashcardStudyPage(QWidget):
         header_layout.addWidget(self.stats_label)
         
         # Shuffle toggle
-        self.shuffle_btn = QPushButton("🔀 Shuffle")
+        self.shuffle_btn = QPushButton("Shuffle")
         self.shuffle_btn.setStyleSheet(self.styles["shuffle_button"])
         self.shuffle_btn.clicked.connect(self.shuffle_cards)
         header_layout.addWidget(self.shuffle_btn)
@@ -64,8 +68,7 @@ class FlashcardStudyPage(QWidget):
         
         # Flip card container - INCREASED SIZE
         self.flip_card_container = QFrame()
-        self.flip_card_container.setFixedSize(1000, 800)
-       
+        self.flip_card_container.setFixedSize(800, 600)
         
         # Create flip card
         self.setup_flip_card()
@@ -79,13 +82,13 @@ class FlashcardStudyPage(QWidget):
         controls_layout.addStretch()
         
         # Correct button
-        self.correct_btn = QPushButton("✓ Correct")
+        self.correct_btn = QPushButton("Correct")
         self.correct_btn.setStyleSheet(self.styles["correct_button"])
         self.correct_btn.clicked.connect(lambda: self.mark_card(True))
         controls_layout.addWidget(self.correct_btn)
         
         # Wrong button
-        self.wrong_btn = QPushButton("✗ Wrong")
+        self.wrong_btn = QPushButton("Wrong")
         self.wrong_btn.setStyleSheet(self.styles["wrong_button"])
         self.wrong_btn.clicked.connect(lambda: self.mark_card(False))
         controls_layout.addWidget(self.wrong_btn)
@@ -98,16 +101,11 @@ class FlashcardStudyPage(QWidget):
         secondary_layout.addStretch()
         
         # Reset progress
-        self.reset_btn = QPushButton("🔄 Reset Progress")
+        self.reset_btn = QPushButton("Reset Progress")
         self.reset_btn.setStyleSheet(self.styles["reset_button"])
         self.reset_btn.clicked.connect(self.reset_progress)
         secondary_layout.addWidget(self.reset_btn)
         
-        # Filter toggle
-        self.filter_checkbox = QCheckBox("Show Only Unlearned")
-        self.filter_checkbox.setStyleSheet(self.styles["filter_checkbox"])
-        self.filter_checkbox.stateChanged.connect(self.apply_filter)
-        secondary_layout.addWidget(self.filter_checkbox)
         
         secondary_layout.addStretch()
         layout.addLayout(secondary_layout)
@@ -189,28 +187,44 @@ class FlashcardStudyPage(QWidget):
             # Update UI
             self.update_card_counter()
             self.update_progress()
-        
+    
     def update_card_counter(self):
         total = len(self.flashcard_set['cards'])
         current = self.current_card_index + 1
         self.card_counter.setText(f"Card {current} of {total}")
     
     def update_progress(self):
-        # Calculate progress
+        # Calculate progress based on mastered cards (3 correct answers)
         total_cards = len(self.flashcard_set['cards'])
-        learned_cards = sum(1 for card in self.flashcard_set['cards'] 
-                          if card.get('progress', {}).get('learned', False))
+        mastered_cards = 0
         
-        progress = (learned_cards / total_cards) * 100 if total_cards > 0 else 0
+        for card in self.flashcard_set['cards']:
+            card_id = card['question']  # Use question as unique ID
+            if card_id in self.card_progress and self.card_progress[card_id] >= 3:
+                mastered_cards += 1
+        
+        progress = (mastered_cards / total_cards) * 100 if total_cards > 0 else 0
         self.progress_bar.setValue(int(progress))
-        self.stats_label.setText(f"Mastered: {learned_cards}/{total_cards}")
+        self.stats_label.setText(f"Mastered: {mastered_cards}/{total_cards}")
     
     def mark_card(self, correct):
         from core.controller import FlashcardController
         controller = FlashcardController()
         
-        # Mark card as learned if correct, or reset if wrong
-        learned = correct
+        current_card = self.flashcard_set['cards'][self.current_card_index]
+        card_id = current_card['question']
+        
+        # Update progress tracking
+        if card_id not in self.card_progress:
+            self.card_progress[card_id] = 0
+            
+        if correct:
+            self.card_progress[card_id] += 1
+        else:
+            self.card_progress[card_id] = max(0, self.card_progress[card_id] - 1)
+        
+        # Update database
+        learned = self.card_progress[card_id] >= 3
         controller.update_card_progress(
             self.flashcard_set['set_name'],
             self.current_card_index,
@@ -219,27 +233,33 @@ class FlashcardStudyPage(QWidget):
         )
         
         # Update local data
-        card = self.flashcard_set['cards'][self.current_card_index]
-        if 'progress' not in card:
-            card['progress'] = {'learned': False, 'times_correct': 0, 'times_wrong': 0}
+        if 'progress' not in current_card:
+            current_card['progress'] = {'learned': False, 'times_correct': 0, 'times_wrong': 0}
         
         if correct:
-            card['progress']['times_correct'] += 1
-            card['progress']['learned'] = True
+            current_card['progress']['times_correct'] += 1
+            current_card['progress']['learned'] = learned
         else:
-            card['progress']['times_wrong'] += 1
-            card['progress']['learned'] = False
+            current_card['progress']['times_wrong'] += 1
+            current_card['progress']['learned'] = False
         
         # Auto-advance to next card
         self.update_progress()
         if self.current_card_index < len(self.flashcard_set['cards']) - 1:
             self.load_card(self.current_card_index + 1)
         else:
-            # End of set - show completion
-            self.front_label.setText("🎉 Set Complete!")
-            self.back_label.setText(f"You've finished all {len(self.flashcard_set['cards'])} cards!")
-            self.correct_btn.setEnabled(False)
-            self.wrong_btn.setEnabled(False)
+            # End of set - show completion if all mastered
+            mastered_count = sum(1 for card in self.flashcard_set['cards'] 
+                               if card['question'] in self.card_progress and self.card_progress[card['question']] >= 3)
+            
+            if mastered_count == len(self.flashcard_set['cards']):
+                self.front_label.setText("🎉 Set Complete!")
+                self.back_label.setText(f"You've mastered all {len(self.flashcard_set['cards'])} cards!")
+                self.correct_btn.setEnabled(False)
+                self.wrong_btn.setEnabled(False)
+            else:
+                # Loop back to beginning
+                self.load_card(0)
     
     def shuffle_cards(self):
         random.shuffle(self.flashcard_set['cards'])
@@ -265,14 +285,14 @@ class FlashcardStudyPage(QWidget):
                     'times_wrong': 0
                 }
         
+        # Reset local progress tracking
+        self.card_progress = {}
+        
         self.update_progress()
         self.load_card(0)
         self.correct_btn.setEnabled(True)
         self.wrong_btn.setEnabled(True)
-    
-    def apply_filter(self):
-        # TODO: Implement filtering to show only unlearned cards
-        pass
+
     
     def go_back(self):
         self.main_window.show_page(3)  # Back to All Cards page

@@ -15,6 +15,7 @@ from ui.pages.create_flashcard_page import CreateFlashcard
 from ui.pages.existing_flashcard_page import ExistingFlashcard
 from ui.pages.flashcard_study_page import FlashcardStudyPage
 from ui.components.pomodoro_timer import PomodoroTimer
+from ui.pages.flashcard_study_multiple_choice_page import MultipleChoiceStudy
 
 # Import our visual classes
 from ui.visual.animations import SidebarAnimations
@@ -135,7 +136,7 @@ class MainWindow(QWidget):
         sidebar_layout.setSpacing(10)
         
         # Navigation buttons - these will be INSIDE the sidebar box
-        nav_texts = ["Home", "Profile", "Settings", "All Cards", "Help"]
+        nav_texts = ["Home", "Profile", "Settings", "Saved Cards", "Help"]
         self.nav_buttons = []
         
         for i, text in enumerate(nav_texts):
@@ -159,6 +160,8 @@ class MainWindow(QWidget):
         self.create_flashcard_page = CreateFlashcard(self)
         self.existing_flashcard_page = ExistingFlashcard(self)
         self.flashcard_study_page = FlashcardStudyPage(self, None)
+        self.multiple_choice_study_page = MultipleChoiceStudy(self, None) 
+
 
         self.pages_stack.addWidget(self.home_page)         # index 0
         self.pages_stack.addWidget(self.profile_page)      # index 1
@@ -168,6 +171,8 @@ class MainWindow(QWidget):
         self.pages_stack.addWidget(self.create_flashcard_page) # index 5
         self.pages_stack.addWidget(self.existing_flashcard_page) # index 6
         self.pages_stack.addWidget(self.flashcard_study_page) # index 7
+        self.pages_stack.addWidget(self.multiple_choice_study_page) # index 8
+
 
     def setup_animation(self):
         # Initialize animations
@@ -248,3 +253,23 @@ class MainWindow(QWidget):
         """Show the Pomodoro timer settings dialog"""
         self.pomodoro_timer.show_settings(self)
 
+    def show_multiple_choice_study(self, flashcard_set):
+        """Show multiple choice study interface"""
+        try:            
+            # Update the existing multiple choice page with the flashcard set
+            self.multiple_choice_study_page.update_flashcard_set(flashcard_set)
+            
+            # Show the multiple choice page
+            self.pages_stack.setCurrentIndex(8)  
+            
+            if not self.sidebar_collapsed:
+                self.collapse_sidebar()
+                
+        except Exception as e:
+            import traceback
+            traceback.print_exc()
+            from PyQt6.QtWidgets import QMessageBox
+            QMessageBox.critical(self, "Error", f"Failed to start multiple choice: {str(e)}")
+
+
+    
