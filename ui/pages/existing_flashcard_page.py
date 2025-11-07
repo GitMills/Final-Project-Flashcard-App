@@ -1,63 +1,80 @@
 from PyQt6.QtWidgets import (
-    QWidget, QVBoxLayout, QLabel, QPushButton, QScrollArea, QHBoxLayout, QStackedWidget
+    QWidget, QVBoxLayout, QLabel, QPushButton, QScrollArea, QHBoxLayout,
+    QProgressBar, QFrame, QMessageBox
 )
-from PyQt6.QtCore import Qt, QPropertyAnimation
+from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QFont
+from random import shuffle
 
-class FlashcardWidget(QWidget):
+
+class FlashcardWidget(QFrame):
+    """Single clickable flashcard that flips between question and answer."""
     def __init__(self, question, answer):
         super().__init__()
         self.question = question
         self.answer = answer
         self.is_flipped = False
 
-        self.front_label = QLabel(question)
-        self.front_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.front_label.setWordWrap(True)
-
-        self.back_label = QLabel(answer)
-        self.back_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.back_label.setWordWrap(True)
-        self.back_label.hide()
-
-        layout = QVBoxLayout(self)
-        layout.addWidget(self.front_label)
-        layout.addWidget(self.back_label)
-
         self.setStyleSheet("""
+            QFrame {
+                background-color: #FDE3E3;
+                border-radius: 20px;
+            }
             QLabel {
-                font-size: 18px;
+                font-size: 24px;
                 color: #333;
             }
-            QWidget {
-                background-color: #FFFFFF;
-                border-radius: 15px;
-                border: 2px solid #999;
-            }
         """)
-        self.setFixedHeight(120)
+        self.setMinimumHeight(400)
         self.setCursor(Qt.CursorShape.PointingHandCursor)
-        self.mousePressEvent = self.flip_card
 
-    def flip_card(self, event):
+        layout = QVBoxLayout(self)
+        layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
+
+        self.label = QLabel(f"Q: {self.question}")
+        self.label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.label.setWordWrap(True)
+        layout.addWidget(self.label)
+
+    def mousePressEvent(self, event):
+        """Flip the card between question and answer."""
         self.is_flipped = not self.is_flipped
-        self.front_label.setVisible(not self.is_flipped)
-        self.back_label.setVisible(self.is_flipped)
+        self.label.setText(f"A: {self.answer}" if self.is_flipped else f"Q: {self.question}")
 
 
 class ExistingFlashcard(QWidget):
-    def __init__(self, main_window):
+    def __init__(self, main_window=None):
         super().__init__()
         self.main_window = main_window
         self.setup_ui()
-   
+
     def setup_ui(self):
-        self.setStyleSheet("background-color: #FFF7EB;")  # Light cream background
+        self.setStyleSheet("background-color: #FFF7EB;")
         layout = QVBoxLayout()
         layout.setSpacing(20)
         layout.setContentsMargins(40, 30, 40, 30)
         self.setLayout(layout)
-       
+
+        # Header area with Back to Main button
+        header_layout = QHBoxLayout()
+        back_to_main = QPushButton("← Back to Main")
+        back_to_main.setCursor(Qt.CursorShape.PointingHandCursor)
+        back_to_main.setStyleSheet("""
+            QPushButton {
+                background-color: #F27D72;
+                color: white;
+                border-radius: 10px;
+                padding: 10px 20px;
+                font-weight: bold;
+            }
+            QPushButton:hover { background-color: #d25a50; }
+        """)
+        if self.main_window:
+            back_to_main.clicked.connect(lambda: self.main_window.show_page(0))
+        header_layout.addWidget(back_to_main)
+        header_layout.addStretch()
+        layout.addLayout(header_layout)
+
         # Title
         title = QLabel("TOPICS")
         title.setAlignment(Qt.AlignmentFlag.AlignCenter)
@@ -84,7 +101,7 @@ class ExistingFlashcard(QWidget):
         self.scroll_layout.setSpacing(20)
         self.scroll_area.setWidget(self.scroll_widget)
 
-        # Topics
+        # Topic list
         self.topics = [
             {"name": "English", "color": "#B3D9FF", "icon": "📘"},
             {"name": "Math", "color": "#B9FBC0", "icon": "🧮"},
@@ -92,26 +109,53 @@ class ExistingFlashcard(QWidget):
             {"name": "History", "color": "#FFB3B3", "icon": "🌎"},
         ]
 
-        # Flashcard data
+        # Flashcard question/answer sets
         self.qa_sets = {
             "English": [
-                ("What is haha?", "haha is a tawa"),
-                ("what is huhu?", "huhu is a iyak")
+                ("What is the plural form of the word child?", "Children"),
+                ("What is the past tense of eat?", "Ate"),
+                ("What is the opposite of cold?", "Hot"),
+                ("What is the plural of dog?", "Dogs"),
+                ("What is the past tense of see?", "Saw"),
             ],
             "Math": [
-                ("1+1", "2"),
-                ("2+2", "4")
+                ("1+1", "2"), ("2+2", "4"), ("3+3", "6"), ("4+4", "8"), ("5+5", "10")
             ],
             "Science": [
                 ("Who discovered gravity?", "Isaac Newton"),
+                ("What gas do humans need to breathe?", "Oxygen"),
+                ("What is the center of the Solar System?", "The Sun"),
+                ("What do plants need to make food?", "Sunlight"),
+                ("What part of the body pumps blood?", "Heart"),
             ],
             "History": [
                 ("Who killed Magellan?", "Lapu-Lapu"),
-                ("Where is Rizal’s head?", "On the one-peso coin")
+                ("Who was the first President of the United States?", "George Washington"),
+                ("What ship famously sank in 1912?", "Titanic"),
+                ("Who was known as the national hero of the Philippines?", "Dr. Jose Rizal"),
+                ("Who was the first man to walk on the Moon?", "Neil Armstrong"),
             ],
         }
 
-        # Add topic buttons
+        # Show the initial topic list
+        self.show_topics()
+
+    def make_topic_handler(self, topic_name):
+        """Bind topic name to open the topic layout."""
+        return lambda checked=False, t=topic_name: self.open_topic(t)
+
+    def clear_scroll_layout(self):
+        """Utility to clear the scroll layout cleanly."""
+        while self.scroll_layout.count():
+            item = self.scroll_layout.takeAt(0)
+            widget = item.widget()
+            if widget:
+                widget.deleteLater()
+
+    def show_topics(self):
+        """Restore the original topic list."""
+        self.clear_scroll_layout()
+
         for topic in self.topics:
             btn = QPushButton(f"{topic['icon']}   {topic['name']}")
             btn.setMinimumHeight(80)
@@ -131,102 +175,155 @@ class ExistingFlashcard(QWidget):
                     background-color: #dfefff;
                 }}
             """)
-            btn.clicked.connect(lambda checked, t=topic['name']: self.open_topic(t))
+            btn.clicked.connect(self.make_topic_handler(topic["name"]))
             self.scroll_layout.addWidget(btn)
 
-        # Back button
-        back_btn = QPushButton("↩ Back to Main")
-        back_btn.setFixedWidth(160)
-        back_btn.setCursor(Qt.CursorShape.PointingHandCursor)
-        back_btn.setStyleSheet("""
-            QPushButton {
-                background-color: #2b7cff;
-                color: white;
-                border-radius: 10px;
-                padding: 10px;
-            }
-            QPushButton:hover {
-                background-color: #1a5fd0;
-            }
-        """)
-        back_btn.clicked.connect(lambda: self.main_window.show_page(0))
-       
-        btn_layout = QHBoxLayout()
-        btn_layout.addStretch()
-        btn_layout.addWidget(back_btn)
-        btn_layout.addStretch()
-        layout.addLayout(btn_layout)
-
     def open_topic(self, topic_name):
-        """Show example flashcards for the selected topic."""
-        # Clear layout
-        for i in reversed(range(self.scroll_layout.count())):
-            widget = self.scroll_layout.itemAt(i).widget()
-            if widget:
-                widget.deleteLater()
+        """Show the single-study layout for a topic."""
+        self.clear_scroll_layout()
 
-        # Title for selected topic
-        topic_title = QLabel(f"{topic_name} Flashcards")
-        topic_title.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        topic_title.setStyleSheet("""
-            QLabel {
-                font-size: 28px;
-                font-weight: bold;
-                color: #333;
-                background-color: #FFEFD5;
-                border-radius: 10px;
-                padding: 10px;
-            }
-        """)
-        self.scroll_layout.addWidget(topic_title)
+        # Header layout
+        header = QHBoxLayout()
+        header.setAlignment(Qt.AlignmentFlag.AlignTop)
 
-        # Add flashcards
-        for q, a in self.qa_sets.get(topic_name, []):
-            card = FlashcardWidget(q, a)
-            self.scroll_layout.addWidget(card)
+        title = QLabel(f"{topic_name}")
+        title.setStyleSheet("font-weight: bold; color: #9C9AC2; font-size: 20px;")
+        timer_label = QLabel("Study: 25:00")
+        timer_label.setStyleSheet("color: #5f5f5f; font-size: 14px;")
 
-        # Add back button
         back_btn = QPushButton("← Back to Topics")
-        back_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         back_btn.setStyleSheet("""
             QPushButton {
                 background-color: #F27D72;
                 color: white;
                 border-radius: 10px;
-                padding: 10px;
+                padding: 10px 20px;
+                font-weight: bold;
             }
-            QPushButton:hover {
-                background-color: #d25a50;
-            }
+            QPushButton:hover { background-color: #d25a50; }
         """)
         back_btn.clicked.connect(self.show_topics)
-        self.scroll_layout.addWidget(back_btn)
 
-    def show_topics(self):
-        """Show the topic list again."""
-        for i in reversed(range(self.scroll_layout.count())):
-            widget = self.scroll_layout.itemAt(i).widget()
-            if widget:
-                widget.deleteLater()
+        header.addWidget(title)
+        header.addStretch()
+        header.addWidget(timer_label)
+        header.addSpacing(10)
+        header.addWidget(back_btn)
+        self.scroll_layout.addLayout(header)
 
-        for topic in self.topics:
-            btn = QPushButton(f"{topic['icon']}   {topic['name']}")
-            btn.setMinimumHeight(80)
+        # Flashcards
+        self.cards = self.qa_sets.get(topic_name, []).copy()
+        self.remaining_cards = self.cards.copy()
+        self.current_index = 0
+        self.correct_count = 0
+
+        q, a = self.remaining_cards[self.current_index]
+        self.card_widget = FlashcardWidget(q, a)
+        self.scroll_layout.addWidget(self.card_widget)
+
+        # Control buttons
+        btn_layout = QHBoxLayout()
+        btn_layout.setSpacing(15)
+        btn_layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
+
+        shuffle_btn = QPushButton("Shuffle")
+        correct_btn = QPushButton("Correct")
+        wrong_btn = QPushButton("Wrong")
+        reset_btn = QPushButton("Reset Progress")
+
+        for btn, color in [
+            (shuffle_btn, "#55556A"),
+            (correct_btn, "#A7F3A7"),
+            (wrong_btn, "#F9A6A6"),
+            (reset_btn, "#55556A"),
+        ]:
             btn.setCursor(Qt.CursorShape.PointingHandCursor)
+            btn.setMinimumWidth(130)
+            btn.setMinimumHeight(50)
             btn.setStyleSheet(f"""
                 QPushButton {{
-                    background-color: {topic['color']};
-                    border: none;
-                    border-radius: 25px;
-                    font-size: 20px;
+                    background-color: {color};
+                    border-radius: 10px;
+                    font-size: 16px;
                     font-weight: bold;
-                    color: #333;
-                    text-align: left;
-                    padding-left: 30px;
+                    color: black;
                 }}
                 QPushButton:hover {{
-                    background-color: #dfefff;
+                    opacity: 0.8;
                 }}
             """)
-            btn.clicked.connect(lambda checked, t=topic['name']: self.open_topic(t))
-            self.scroll_layout.addWidget(btn)
+            btn_layout.addWidget(btn)
+
+        self.scroll_layout.addLayout(btn_layout)
+
+        # Progress bar
+        self.progress_bar = QProgressBar()
+        self.progress_bar.setValue(0)
+        self.progress_bar.setTextVisible(True)
+        self.progress_bar.setStyleSheet("""
+            QProgressBar {
+                border: none;
+                height: 18px;
+                border-radius: 8px;
+                background-color: #DDD;
+            }
+            QProgressBar::chunk {
+                background-color: #55556A;
+                border-radius: 8px;
+            }
+        """)
+        self.scroll_layout.addWidget(self.progress_bar)
+
+        # Button logic
+        shuffle_btn.clicked.connect(lambda: self.shuffle_cards(topic_name))
+        correct_btn.clicked.connect(self.mark_correct)
+        wrong_btn.clicked.connect(self.mark_wrong)
+        reset_btn.clicked.connect(self.reset_progress)
+
+        self.update_card()
+
+    # === Flashcard Logic ===
+    def update_card(self):
+        if not self.remaining_cards:
+            self.card_widget.label.setText("🎉 Set Completed!")
+            self.progress_bar.setValue(100)
+            QMessageBox.information(self, "Set Completed", "Congratulations! You've completed this set.")
+            return
+
+        q, a = self.remaining_cards[self.current_index]
+        self.card_widget.question, self.card_widget.answer = q, a
+        self.card_widget.label.setText(f"Q: {q}")
+        self.card_widget.is_flipped = False
+
+        progress = int((self.correct_count / len(self.cards)) * 100)
+        self.progress_bar.setValue(progress)
+
+    def mark_correct(self):
+        if not self.remaining_cards:
+            return
+
+        self.correct_count += 1
+        del self.remaining_cards[self.current_index]
+        if not self.remaining_cards:
+            self.update_card()
+            return
+
+        self.current_index %= len(self.remaining_cards)
+        self.update_card()
+
+    def mark_wrong(self):
+        if not self.remaining_cards:
+            return
+        self.current_index = (self.current_index + 1) % len(self.remaining_cards)
+        self.update_card()
+
+    def shuffle_cards(self, topic_name):
+        shuffle(self.remaining_cards)
+        self.current_index = 0
+        self.update_card()
+
+    def reset_progress(self):
+        self.remaining_cards = self.cards.copy()
+        self.correct_count = 0
+        self.current_index = 0
+        self.update_card()
