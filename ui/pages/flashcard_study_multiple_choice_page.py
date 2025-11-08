@@ -1,6 +1,5 @@
 # FINAL PROJECT FLASHCARD APP / ui / pages / flashcard_study_multiple_choice_page.py
 
-
 from PyQt6.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QLabel, 
                             QPushButton, QMessageBox, QFrame, QButtonGroup,
                             QRadioButton, QGridLayout)
@@ -20,24 +19,24 @@ class MultipleChoiceStudy(QWidget):
     
     def setup_ui(self):
         layout = QVBoxLayout()
-        layout.setSpacing(15)
-        layout.setContentsMargins(20, 20, 20, 20)
+        layout.setSpacing(10)
+        layout.setContentsMargins(15, 15, 15, 15)
         
-        # Header frame
+        # Header frame - KEEP YOUR STYLES
         header_frame = QFrame()
         header_frame.setStyleSheet(self.styles["header_frame"])
         header_layout = QHBoxLayout(header_frame)
         
         if self.flashcard_set:
-            set_name_text = f"Multiple Choice: {self.flashcard_set['set_name']}"
+            set_name_text = f"MC: {self.flashcard_set['set_name']}"
         else:
-            set_name_text = "Multiple Choice: No set selected"
+            set_name_text = "Multiple Choice"
         
         self.set_name_label = QLabel(set_name_text)
         self.set_name_label.setStyleSheet(self.styles["set_name_label"])
         header_layout.addWidget(self.set_name_label)
         
-        self.stats_label = QLabel("Correct: 0/0 | Remaining: 0/0")
+        self.stats_label = QLabel("0/0 | Rem: 0/0")
         self.stats_label.setStyleSheet(self.styles["stats_label"])
         header_layout.addWidget(self.stats_label)
         
@@ -46,17 +45,17 @@ class MultipleChoiceStudy(QWidget):
         back_btn = QPushButton("← Back")
         back_btn.setStyleSheet(self.styles["back_button"])
         back_btn.clicked.connect(self.go_back)
+        back_btn.setMinimumSize(80, 30)
         header_layout.addWidget(back_btn)
         
         layout.addWidget(header_frame)
         
-        # Add stretch to push content down
-        layout.addStretch()
-        
-        # Question frame - make it larger and centered
+        # Question frame - KEEP YOUR STYLES
         question_frame = QFrame()
         question_frame.setStyleSheet(self.styles["question_frame"])
-        question_frame.setMinimumHeight(150)  # Make it taller
+        question_frame.setMinimumHeight(60)
+        question_frame.setMaximumHeight(150)
+        
         question_layout = QVBoxLayout(question_frame)
         
         if self.flashcard_set:
@@ -67,14 +66,14 @@ class MultipleChoiceStudy(QWidget):
         self.question_label = QLabel(initial_question_text)
         self.question_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.question_label.setWordWrap(True)
-        self.question_label.setStyleSheet(self.styles["question_label"])
+        self.question_label.setStyleSheet(self.styles["question_label"])  # YOUR STYLE
         question_layout.addWidget(self.question_label)
         
         layout.addWidget(question_frame)
         
-        # Options - make the grid centered but let it expand
+        # Options - KEEP YOUR STYLES
         self.options_layout = QGridLayout()
-        self.options_layout.setSpacing(15)
+        self.options_layout.setSpacing(8)
         
         self.button_group = QButtonGroup()
         self.button_group.setExclusive(True)
@@ -82,9 +81,9 @@ class MultipleChoiceStudy(QWidget):
         self.option_buttons = []
         for i in range(4):
             option_btn = QRadioButton()
-            option_btn.setMinimumHeight(80)  # Taller buttons
+            option_btn.setMinimumHeight(45)
             option_btn.setVisible(False)
-            option_btn.setStyleSheet(self.styles["option_button"])
+            option_btn.setStyleSheet(self.styles["option_button"])  # YOUR STYLE
             self.button_group.addButton(option_btn, i)
             self.option_buttons.append(option_btn)
             
@@ -92,7 +91,6 @@ class MultipleChoiceStudy(QWidget):
             col = i % 2
             self.options_layout.addWidget(option_btn, row, col)
         
-        # Create a container for the options to center them
         options_container = QWidget()
         options_container_layout = QVBoxLayout(options_container)
         options_container_layout.addStretch()
@@ -101,56 +99,51 @@ class MultipleChoiceStudy(QWidget):
         
         layout.addWidget(options_container)
         
-        # Result label
+        # Result label - KEEP YOUR STYLES
         self.result_label = QLabel()
         self.result_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.result_label.setMinimumHeight(50)
-        self.result_label.setStyleSheet(self.styles["result_label"])
+        self.result_label.setMinimumHeight(25)
+        self.result_label.setStyleSheet(self.styles["result_label"])  # YOUR STYLE
         layout.addWidget(self.result_label)
         
-        # Next button container with stretches
-        next_button_container = QWidget()
-        next_button_layout = QVBoxLayout(next_button_container)
-        next_button_layout.addStretch()
-        
+        # Next button - KEEP YOUR STYLES
         self.next_btn = QPushButton("Next Question")
-        self.next_btn.setStyleSheet(self.styles["next_button"])
+        self.next_btn.setStyleSheet(self.styles["next_button"])  # YOUR STYLE
         self.next_btn.clicked.connect(self.show_next_question)
-        self.next_btn.setMinimumHeight(50)  # Larger button
+        self.next_btn.setMinimumHeight(35)
+        self.next_btn.setMaximumWidth(200)
+            
         if not self.flashcard_set:
             self.next_btn.setEnabled(False)
-        next_button_layout.addWidget(self.next_btn)
         
-        next_button_layout.addStretch()
-        layout.addWidget(next_button_container)
-        
-        # Add bottom stretch to complete the centering
-        layout.addStretch()
+        button_container = QHBoxLayout()
+        button_container.addStretch()
+        button_container.addWidget(self.next_btn)
+        button_container.addStretch()
+        layout.addLayout(button_container)
         
         self.setLayout(layout)
-        
         self.button_group.buttonClicked.connect(self.on_option_selected)
 
+    # ALL YOUR EXISTING METHODS BELOW - NO CHANGES TO FUNCTIONALITY
     def update_flashcard_set(self, flashcard_set):
         self.flashcard_set = flashcard_set
         self.correct_answers = 0
         self.total_questions = 0
         
-        # Create a working copy of cards that shrinks as you get them right
         self.remaining_cards = self.flashcard_set['cards'].copy()
-        self.mastered_cards = []  # Cards you've answered correctly ON FIRST TRY
-        self.attempted_cards = {}  # Track which cards have been attempted and their status
+        self.mastered_cards = []
+        self.attempted_cards = {}
         
-        self.set_name_label.setText(f"Multiple Choice: {self.flashcard_set['set_name']}")
+        self.set_name_label.setText(f"MC: {self.flashcard_set['set_name']}")
         remaining_count = len(self.remaining_cards)
         total_cards = len(self.flashcard_set['cards'])
-        self.stats_label.setText(f"Correct: {self.correct_answers}/{total_cards} | Remaining: {remaining_count}/{total_cards}")
+        self.stats_label.setText(f"0/{total_cards} | Rem: {remaining_count}/{total_cards}")
         self.next_btn.setEnabled(True)
         
         self.show_next_question()
 
     def show_next_question(self):
-        # Check if all cards are mastered
         if not self.remaining_cards:
             self.show_completion_message()
             return
@@ -164,13 +157,10 @@ class MultipleChoiceStudy(QWidget):
             button.setVisible(True)
         self.button_group.setExclusive(True)
         
-        # Always pick from remaining cards (ones you haven't mastered on first try)
         self.current_card = random.choice(self.remaining_cards)
         correct_answer = self.current_card['answer']
         
         options = [correct_answer]
-        
-        # Get wrong answers from ALL cards
         all_other_cards = [card for card in self.flashcard_set['cards'] if card['answer'] != correct_answer]
         wrong_answers = random.sample([card['answer'] for card in all_other_cards], min(3, len(all_other_cards)))
         
@@ -192,24 +182,17 @@ class MultipleChoiceStudy(QWidget):
             return
             
         selected_index = self.button_group.id(button)
-        
-        # Use question text as unique identifier instead of card object
         current_question = self.current_card['question']
-        
-        # Check if this is the FIRST time seeing this card
         is_first_attempt = current_question not in self.attempted_cards
         
         if selected_index == self.correct_answer_index:
-            # CORRECT ANSWER
             if is_first_attempt:
-                # FIRST TRY CORRECT - remove from remaining cards, add to mastered, and count as correct
                 self.remaining_cards.remove(self.current_card)
                 self.mastered_cards.append(self.current_card)
                 self.attempted_cards[current_question] = 'mastered'
-                self.correct_answers += 1  # ONLY COUNT FIRST-TIME CORRECT ANSWERS
+                self.correct_answers += 1
                 self.result_label.setText("Correct! First try - this question is mastered!")
             else:
-                # LATER TRY CORRECT - but card stays in pool since initially wrong
                 self.result_label.setText("Correct! But since you got it wrong before, it will appear again.")
             
             for btn in self.option_buttons:
@@ -217,22 +200,18 @@ class MultipleChoiceStudy(QWidget):
             self.next_btn.show()
         
         else:
-            # WRONG ANSWER - mark as attempted and wrong
             self.attempted_cards[current_question] = 'failed'
             button.setEnabled(False)
             self.result_label.setText("Wrong! This question will appear again until you master it.")
         
-        # Update stats
         remaining_count = len(self.remaining_cards)
         total_cards = len(self.flashcard_set['cards'])
-        self.stats_label.setText(f"Correct: {self.correct_answers}/{total_cards} | Remaining: {remaining_count}/{total_cards}")
+        self.stats_label.setText(f"{self.correct_answers}/{total_cards} | Rem: {remaining_count}/{total_cards}")
         
-        # If no more cards, show completion
         if not self.remaining_cards:
             self.result_label.setText("All questions mastered on first try! Quiz complete!")
 
     def show_completion_message(self):
-        # Show when all cards are mastered
         self.question_label.setText("Quiz Complete!")
         
         for button in self.option_buttons:
@@ -246,7 +225,6 @@ class MultipleChoiceStudy(QWidget):
         self.next_btn.show()
 
     def restart_quiz(self):
-        # Restart the quiz with all cards
         self.update_flashcard_set(self.flashcard_set)
         self.next_btn.setText("Next Question")
         self.next_btn.clicked.disconnect()

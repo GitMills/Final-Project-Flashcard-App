@@ -1,6 +1,5 @@
 # FINAL PROJECT FLASHCARD APP / ui / pages / existing_flashcard_page.py
 
-
 from PyQt6.QtWidgets import (
     QWidget, QVBoxLayout, QLabel, QPushButton, QScrollArea, QHBoxLayout,
     QProgressBar, QFrame, QMessageBox
@@ -12,11 +11,12 @@ from random import shuffle
 
 class FlashcardWidget(QFrame):
     """Single clickable flashcard that flips between question and answer."""
-    def __init__(self, question, answer):
+    def __init__(self, question, answer, main_window=None):
         super().__init__()
         self.question = question
         self.answer = answer
         self.is_flipped = False
+        self.main_window = main_window
 
         self.setStyleSheet("""
             QFrame {
@@ -24,11 +24,19 @@ class FlashcardWidget(QFrame):
                 border-radius: 20px;
             }
             QLabel {
-                font-size: 24px;
+                font-size: 16px;
                 color: #333;
             }
         """)
-        self.setMinimumHeight(400)
+        
+        # RESPONSIVE SIZING - 30% of screen height
+        if main_window:
+            screen = main_window.screen()
+            screen_size = screen.availableGeometry()
+            self.setMinimumHeight(int(screen_size.height() * 0.3))
+        else:
+            self.setMinimumHeight(300)  # Fallback
+        
         self.setCursor(Qt.CursorShape.PointingHandCursor)
 
         layout = QVBoxLayout(self)
@@ -40,7 +48,7 @@ class FlashcardWidget(QFrame):
         layout.addWidget(self.label)
 
     def mousePressEvent(self, event):
-        """Flip the card between question and answer."""
+        # Flip the card between question and answer.
         self.is_flipped = not self.is_flipped
         self.label.setText(f"A: {self.answer}" if self.is_flipped else f"Q: {self.question}")
 
@@ -83,7 +91,7 @@ class ExistingFlashcard(QWidget):
         title.setAlignment(Qt.AlignmentFlag.AlignCenter)
         title.setStyleSheet("""
             QLabel {
-                font-size: 32px;
+                font-size: 24px;
                 font-weight: bold;
                 background-color: #F27D72;
                 color: white;
@@ -144,11 +152,11 @@ class ExistingFlashcard(QWidget):
         self.show_topics()
 
     def make_topic_handler(self, topic_name):
-        """Bind topic name to open the topic layout."""
+        # Bind topic name to open the topic layout.
         return lambda checked=False, t=topic_name: self.open_topic(t)
 
     def clear_scroll_layout(self):
-        """Utility to clear the scroll layout cleanly."""
+        # Utility to clear the scroll layout cleanly.
         while self.scroll_layout.count():
             item = self.scroll_layout.takeAt(0)
             widget = item.widget()
@@ -156,12 +164,20 @@ class ExistingFlashcard(QWidget):
                 widget.deleteLater()
 
     def show_topics(self):
-        """Restore the original topic list."""
+        # Restore the original topic list.
         self.clear_scroll_layout()
 
         for topic in self.topics:
             btn = QPushButton(f"{topic['icon']}   {topic['name']}")
-            btn.setMinimumHeight(80)
+            
+            # RESPONSIVE SIZING - 10% of screen height
+            if self.main_window:
+                screen = self.main_window.screen()
+                screen_size = screen.availableGeometry()
+                btn.setMinimumHeight(int(screen_size.height() * 0.1))
+            else:
+                btn.setMinimumHeight(60)  # Fallback
+                
             btn.setCursor(Qt.CursorShape.PointingHandCursor)
             btn.setStyleSheet(f"""
                 QPushButton {{
@@ -182,7 +198,7 @@ class ExistingFlashcard(QWidget):
             self.scroll_layout.addWidget(btn)
 
     def open_topic(self, topic_name):
-        """Show the single-study layout for a topic."""
+        # Show the single-study layout for a topic.
         self.clear_scroll_layout()
 
         # Header layout
@@ -221,7 +237,7 @@ class ExistingFlashcard(QWidget):
         self.correct_count = 0
 
         q, a = self.remaining_cards[self.current_index]
-        self.card_widget = FlashcardWidget(q, a)
+        self.card_widget = FlashcardWidget(q, a, self.main_window)  # Pass main_window for responsive sizing
         self.scroll_layout.addWidget(self.card_widget)
 
         # Control buttons
@@ -241,8 +257,7 @@ class ExistingFlashcard(QWidget):
             (reset_btn, "#55556A"),
         ]:
             btn.setCursor(Qt.CursorShape.PointingHandCursor)
-            btn.setMinimumWidth(130)
-            btn.setMinimumHeight(50)
+            btn.setMinimumSize(130, 50)  # MINIMUM SIZE - functional requirement
             btn.setStyleSheet(f"""
                 QPushButton {{
                     background-color: {color};

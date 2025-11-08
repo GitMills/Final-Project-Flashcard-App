@@ -18,7 +18,7 @@ class SidebarAnimations:
         self.max_width_animation.setDuration(300)
     
     def expand_sidebar(self, start_width=50, end_width=200):
-        """Animate sidebar expansion"""
+        # Animate sidebar expansion
         self.width_animation.setStartValue(start_width)
         self.width_animation.setEndValue(end_width)
         self.max_width_animation.setStartValue(start_width)
@@ -28,7 +28,7 @@ class SidebarAnimations:
         self.max_width_animation.start()
     
     def collapse_sidebar(self, start_width=200, end_width=50):
-        """Animate sidebar collapse"""
+        # Animate sidebar collapse
         self.width_animation.setStartValue(start_width)
         self.width_animation.setEndValue(end_width)
         self.max_width_animation.setStartValue(start_width)
@@ -38,5 +38,5 @@ class SidebarAnimations:
         self.max_width_animation.start()
     
     def get_animation_state(self):
-        """Check if any animation is running"""
+        # Check if any animation is runnig
         return self.width_animation.state() == QPropertyAnimation.State.Running

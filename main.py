@@ -1,8 +1,22 @@
 # FINAL PROJECT FLASHCARD APP / main.py
 
 import sys
+import os
 from PyQt6.QtWidgets import QApplication
 from PyQt6.QtGui import QIcon
+from PyQt6.QtCore import Qt
+
+# Enable high DPI scaling with proper fallbacks
+if hasattr(Qt, 'HighDpiScaleFactorRoundingPolicy'):
+    QApplication.setHighDpiScaleFactorRoundingPolicy(
+        Qt.HighDpiScaleFactorRoundingPolicy.PassThrough
+    )
+
+# Set environment variables for scaling
+os.environ["QT_ENABLE_HIGHDPI_SCALING"] = "1"
+os.environ["QT_AUTO_SCREEN_SCALE_FACTOR"] = "1"
+os.environ["QT_SCALE_FACTOR"] = "1"
+
 from ui.main_window import MainWindow
 from utils.path_helper import get_asset_path
 
@@ -14,6 +28,7 @@ def main():
 
     # Create and show main window
     window = MainWindow()
+    # Changed from showMaximized() to show() to let layout determine size
     window.showMaximized()
     
     # Run application
@@ -21,4 +36,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-    

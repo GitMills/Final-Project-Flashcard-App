@@ -1,6 +1,5 @@
 # FINAL PROJECT FLASHCARD APP / ui / components / pomodoro_timer.py
 
-
 from PyQt6.QtCore import QTimer, QPropertyAnimation, QEasingCurve
 from PyQt6.QtWidgets import (QDialog, QVBoxLayout, QHBoxLayout, QLabel, QPushButton, 
                             QSpinBox, QMessageBox, QWidget, QFrame)
@@ -62,7 +61,14 @@ class BreakOverlay(QWidget):
         """)
         message_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         message_label.setWordWrap(True)
-        message_label.setMaximumWidth(500)
+        
+        # RESPONSIVE SIZING - 60% of screen width for message      ganito dapat sizing wag fixed para applicable for all screensizes
+        if self.parent():
+            screen = self.parent().screen()
+            screen_size = screen.availableGeometry()
+            message_label.setMaximumWidth(int(screen_size.width() * 0.6))
+        else:
+            message_label.setMaximumWidth(500)
         
         # Session progress
         progress_label = QLabel(f"Session {self.session_info} completed!")
@@ -90,7 +96,14 @@ class BreakOverlay(QWidget):
             }
         """)
         self.timer_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.timer_label.setMinimumWidth(200)
+        
+        # RESPONSIVE SIZING - 20% of screen width for timer
+        if self.parent():
+            screen = self.parent().screen()
+            screen_size = screen.availableGeometry()
+            self.timer_label.setMinimumWidth(int(screen_size.width() * 0.2))
+        else:
+            self.timer_label.setMinimumWidth(200)
         
         # Instruction
         instruction_label = QLabel("Relax... The timer will automatically continue when break is over")
@@ -268,14 +281,14 @@ class PomodoroTimer:
                     """)
     
     def show_break_overlay(self):
-        """Show the full-screen break overlay"""
+        # Show the full-screen break overlay
         session_info = f"{self.current_session}/{self.total_sessions}"
         self.break_overlay = BreakOverlay(self.main_window, session_info)
         self.break_overlay.show()
         self.break_overlay.raise_()
     
     def remove_break_overlay(self):
-        """Remove the break overlay"""
+        # Remove the break overlay
         if self.break_overlay:
             self.break_overlay.deleteLater()
             self.break_overlay = None
@@ -288,7 +301,7 @@ class PomodoroTimer:
             # STUDY TIME FINISHED - START FORCED BREAK
             self.sessions_completed += 1
             self.is_break_time = True
-            self.forced_break_mode = True  # THIS IS THE FORCE!
+            self.forced_break_mode = True  # THIS IS THE FORCE BREAK!
             self.time_remaining = self.break_time * 60
             
             # Show break overlay (covers entire screen)
@@ -339,7 +352,7 @@ class PomodoroTimer:
         return False
     
     def show_settings(self, parent_widget):
-        """Show settings dialog - disabled during forced breaks"""
+        # Show settings dialog - disabled during forced breaks
         if self.forced_break_mode:
             QMessageBox.warning(parent_widget, "Settings Locked", 
                               "Cannot change settings during forced break!\n"
@@ -367,7 +380,16 @@ class PomodoroSettings(QDialog):
     
     def setup_ui(self):
         self.setWindowTitle("Timer Settings")
-        self.setFixedSize(350, 250)
+        
+        # RESPONSIVE SIZING - 20% of screen size
+        if self.parent():
+            screen = self.parent().screen()
+            screen_size = screen.availableGeometry()
+            dialog_width = int(screen_size.width() * 0.2)
+            dialog_height = int(screen_size.height() * 0.2)
+            self.setMinimumSize(dialog_width, dialog_height)
+        else:
+            self.setMinimumSize(350, 250)  # Fallback
         
         layout = QVBoxLayout()
         

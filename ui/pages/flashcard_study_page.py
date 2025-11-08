@@ -1,6 +1,5 @@
 # FINAL PROJECT FLASHCARD APP / ui / pages / flashcard_study_page.py
 
-
 from PyQt6.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QLabel, QPushButton, 
                             QFrame, QProgressBar, QCheckBox)
 from PyQt6.QtCore import Qt
@@ -52,7 +51,16 @@ class FlashcardStudyPage(QWidget):
         card_area_layout.addStretch()
         
         self.flip_card_container = QFrame()
-        self.flip_card_container.setFixedSize(1000, 800)
+        
+        # RESPONSIVE SIZING - 40% of screen width and height
+        if self.main_window:
+            screen = self.main_window.screen()
+            screen_size = screen.availableGeometry()
+            card_width = int(screen_size.width() * 0.4)
+            card_height = int(screen_size.height() * 0.4)
+            self.flip_card_container.setMinimumSize(card_width, card_height)
+        else:
+            self.flip_card_container.setMinimumSize(800, 600)  # Fallback
         
         # Create flip card with card counter
         self.setup_flip_card()

@@ -1,8 +1,7 @@
 # FINAL PROJECT FLASHCARD APP / ui / pages / all_cards_page.py
 
-
 from PyQt6.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QLabel, QListWidget, 
-                            QPushButton, QMessageBox, QFrame, QScrollArea, QGridLayout, QDialog)
+                            QPushButton, QMessageBox, QFrame, QScrollArea, QGridLayout, QDialog, QApplication)
 from PyQt6.QtCore import Qt, QSize
 from PyQt6.QtGui import QPixmap, QIcon
 from ui.visual.styles.styles import get_all_cards_styles
@@ -40,7 +39,12 @@ class AllCards(QWidget):
         refresh_icon_path = get_asset_path("refresh.png")
         if refresh_icon_path:
             self.refresh_btn.setIcon(QIcon(refresh_icon_path))
-            self.refresh_btn.setIconSize(QSize(56, 56))  # Size Adjustment Icon
+
+        # This makes the icons consistent to all screen sizes
+        screen = self.main_window.screen()
+        screen_size = screen.availableGeometry()
+        icon_size = int(min(screen_size.width(), screen_size.height()) * 0.04)  # 4% of screen
+        self.refresh_btn.setIconSize(QSize(icon_size, icon_size))
 
         refresh_layout.addWidget(self.refresh_btn)
         refresh_layout.addStretch()  # Makes the button not all the way up to the end of the screen
@@ -92,8 +96,10 @@ class AllCards(QWidget):
                 no_sets_icon_path = get_asset_path("warning_icon.png")
                 if no_sets_icon_path:
                     icon_btn.setIcon(QIcon(no_sets_icon_path))
-                    icon_btn.setIconSize(QSize(176, 176))
-            
+                    screen = self.main_window.screen()
+                    screen_size = screen.availableGeometry()
+                    icon_size = int(min(screen_size.width(), screen_size.height()) * 0.1)  # 10% of screen
+                    icon_btn.setIconSize(QSize(icon_size, icon_size))            
                 no_sets_layout.addWidget(icon_btn)
                 
                 # Text message
@@ -128,7 +134,7 @@ class AllCards(QWidget):
         # Create a styled card for a flashcard set
         card_frame = QFrame()
         card_frame.setStyleSheet(self.styles["card_frame"])
-        card_frame.setMinimumWidth(300)
+        card_frame.setMinimumWidth(200)
         
         card_layout = QVBoxLayout(card_frame)
         card_layout.setSpacing(10)
@@ -174,7 +180,6 @@ class AllCards(QWidget):
             
             study_dialog = QDialog(self)
             study_dialog.setWindowTitle("Choose Study Mode")
-            study_dialog.setFixedSize(600, 400)
             
             layout = QVBoxLayout()
             
@@ -259,7 +264,11 @@ class AllCards(QWidget):
         if delete_icon_path:
             custom_icon = QPixmap(delete_icon_path)
             if not custom_icon.isNull():
-                msg_box.setIconPixmap(custom_icon.scaled(74, 74, Qt.AspectRatioMode.KeepAspectRatio))
+                # RESPONSIVE ICON SCALING - 5% of screen size
+                screen = self.main_window.screen()
+                screen_size = screen.availableGeometry()
+                icon_size = int(min(screen_size.width(), screen_size.height()) * 0.05)  # 5% of screen
+                msg_box.setIconPixmap(custom_icon.scaled(icon_size, icon_size, Qt.AspectRatioMode.KeepAspectRatio))
         
         # Set buttons and style
         msg_box.setStandardButtons(QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No)

@@ -1,6 +1,5 @@
 # FINAL PROJECT FLASHCARD APP / ui / pages / create_flashcard_page.py
 
-
 from PyQt6.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QLabel, QPushButton, QLineEdit, QTextEdit, QScrollArea, QFrame, QMessageBox
 from PyQt6.QtCore import Qt, QTimer, QPropertyAnimation, QEasingCurve
 from PyQt6.QtGui import QPixmap
@@ -122,7 +121,7 @@ class CreateFlashcard(QWidget):
         # Only add remove button for cards 5 and above
         if self.current_card_number >= 5:
             remove_btn = QPushButton("✗")
-            remove_btn.setFixedSize(30, 30)
+            remove_btn.setMinimumSize(30, 30)  # FIXED: setFixedSize -> setMinimumSize
             remove_btn.setStyleSheet(self.styles["remove_btn"])
             remove_btn.clicked.connect(lambda checked, frame=card_frame: self.remove_flashcard(frame))
             card_header.addStretch()
@@ -240,7 +239,7 @@ class CreateFlashcard(QWidget):
         # Add remove button only for cards 5+
         if card_number >= 5:
             remove_btn = QPushButton("✗")
-            remove_btn.setFixedSize(30, 30)
+            remove_btn.setMinimumSize(30, 30)  # FIXED: setFixedSize -> setMinimumSize
             remove_btn.setStyleSheet(self.styles['remove_btn'])
             remove_btn.clicked.connect(lambda checked, frame=card_frame: self.remove_flashcard(frame))
             card_header.addStretch()
@@ -274,7 +273,11 @@ class CreateFlashcard(QWidget):
                 custom_icon = QPixmap(icon_path)
                 
                 if not custom_icon.isNull():
-                    missing_set_warning.setIconPixmap(custom_icon.scaled(74, 74, Qt.AspectRatioMode.KeepAspectRatio))
+                    # RESPONSIVE ICON SCALING
+                    screen = self.main_window.screen()
+                    screen_size = screen.availableGeometry()
+                    icon_size = int(min(screen_size.width(), screen_size.height()) * 0.05)  # 5% of screen
+                    missing_set_warning.setIconPixmap(custom_icon.scaled(icon_size, icon_size, Qt.AspectRatioMode.KeepAspectRatio))
                 else:
                     missing_set_warning.setIcon(QMessageBox.Icon.Information)
                 
@@ -316,7 +319,11 @@ class CreateFlashcard(QWidget):
                 custom_icon = QPixmap(icon_path)
                 
                 if not custom_icon.isNull():
-                    min_cards_warning.setIconPixmap(custom_icon.scaled(74, 74, Qt.AspectRatioMode.KeepAspectRatio))
+                    # RESPONSIVE ICON SCALING
+                    screen = self.main_window.screen()
+                    screen_size = screen.availableGeometry()
+                    icon_size = int(min(screen_size.width(), screen_size.height()) * 0.05)  # 5% of screen
+                    min_cards_warning.setIconPixmap(custom_icon.scaled(icon_size, icon_size, Qt.AspectRatioMode.KeepAspectRatio))
                 else:
                     min_cards_warning.setIcon(QMessageBox.Icon.Information)
                     
@@ -342,7 +349,11 @@ class CreateFlashcard(QWidget):
                 custom_icon = QPixmap(icon_path)
                 
                 if not custom_icon.isNull():
-                    save_error_warning.setIconPixmap(custom_icon.scaled(74, 74, Qt.AspectRatioMode.KeepAspectRatio))
+                    # RESPONSIVE ICON SCALING
+                    screen = self.main_window.screen()
+                    screen_size = screen.availableGeometry()
+                    icon_size = int(min(screen_size.width(), screen_size.height()) * 0.05)  # 5% of screen
+                    save_error_warning.setIconPixmap(custom_icon.scaled(icon_size, icon_size, Qt.AspectRatioMode.KeepAspectRatio))
                 else:
                     save_error_warning.setIcon(QMessageBox.Icon.Information)
                 
@@ -366,7 +377,11 @@ class CreateFlashcard(QWidget):
             custom_icon = QPixmap(icon_path)
             
             if not custom_icon.isNull():
-                critical_error_warning.setIconPixmap(custom_icon.scaled(74, 74, Qt.AspectRatioMode.KeepAspectRatio))
+                # RESPONSIVE ICON SCALING
+                screen = self.main_window.screen()
+                screen_size = screen.availableGeometry()
+                icon_size = int(min(screen_size.width(), screen_size.height()) * 0.05)  # 5% of screen
+                critical_error_warning.setIconPixmap(custom_icon.scaled(icon_size, icon_size, Qt.AspectRatioMode.KeepAspectRatio))
             else:
                 critical_error_warning.setIcon(QMessageBox.Icon.Information)
             
@@ -387,7 +402,11 @@ class CreateFlashcard(QWidget):
         custom_icon = QPixmap(icon_path)
         
         if not custom_icon.isNull():
-            msg_box.setIconPixmap(custom_icon.scaled(64, 64, Qt.AspectRatioMode.KeepAspectRatio))
+            # RESPONSIVE ICON SCALING
+            screen = self.main_window.screen()
+            screen_size = screen.availableGeometry()
+            icon_size = int(min(screen_size.width(), screen_size.height()) * 0.04)  # 4% of screen
+            msg_box.setIconPixmap(custom_icon.scaled(icon_size, icon_size, Qt.AspectRatioMode.KeepAspectRatio))
         else:
             msg_box.setIcon(QMessageBox.Icon.Information)
         
@@ -409,7 +428,11 @@ class CreateFlashcard(QWidget):
         custom_icon = QPixmap(icon_path)
         
         if not custom_icon.isNull():
-            msg_box.setIconPixmap(custom_icon.scaled(84, 84, Qt.AspectRatioMode.KeepAspectRatio))
+            # RESPONSIVE ICON SCALING
+            screen = self.main_window.screen()
+            screen_size = screen.availableGeometry()
+            icon_size = int(min(screen_size.width(), screen_size.height()) * 0.06)  # 6% of screen
+            msg_box.setIconPixmap(custom_icon.scaled(icon_size, icon_size, Qt.AspectRatioMode.KeepAspectRatio))
         else:
             msg_box.setIcon(QMessageBox.Icon.Warning)
         

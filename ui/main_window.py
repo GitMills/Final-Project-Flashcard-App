@@ -35,7 +35,6 @@ class MainWindow(QWidget):
         
         self.setup_ui()
         self.setup_animation()
-        self.resize(1000, 800)
 
     def setup_ui(self):
         # Main layout
@@ -62,7 +61,7 @@ class MainWindow(QWidget):
         
         # Burger button
         self.toggle_btn = QPushButton("☰")
-        self.toggle_btn.setFixedSize(45, 45)
+        self.toggle_btn.setMinimumSize(45, 45)
         self.toggle_btn.setStyleSheet(self.sidebar_styles["toggle_button"])
         self.toggle_btn.clicked.connect(self.toggle_sidebar)
         header_layout.addWidget(self.toggle_btn)
@@ -75,7 +74,7 @@ class MainWindow(QWidget):
 
         # Pomodoro control button
         self.pomodoro_btn = QPushButton("▶ Start Timer")
-        self.pomodoro_btn.setFixedSize(100, 35)
+        self.pomodoro_btn.setMinimumSize(100, 35)
         self.pomodoro_btn.setStyleSheet("""
             QPushButton {
                 background-color: #A6E3A1;
@@ -94,7 +93,7 @@ class MainWindow(QWidget):
 
         # Timer settings button
         self.timer_settings_btn = QPushButton("⚙")
-        self.timer_settings_btn.setFixedSize(35, 35)
+        self.timer_settings_btn.setMinimumSize(35, 35)
         self.pomodoro_btn.setStyleSheet("""
             QPushButton {
                 background-color: #585B70;
@@ -125,10 +124,9 @@ class MainWindow(QWidget):
 
         self.setLayout(main_layout)
         self.setWindowTitle("Remora")
-        self.resize(1000, 800)
 
     def update_timer_display(self, text):
-        """Update the timer display text"""
+        # Update the timer display text
         self.timer_display.setText(text)
     
     def setup_sidebar_content(self):
@@ -143,7 +141,7 @@ class MainWindow(QWidget):
         
         for i, text in enumerate(nav_texts):
             btn = QPushButton(text)  # Show text immediately
-            btn.setFixedHeight(40)
+            btn.setMinimumHeight(40)
             btn.setStyleSheet(self.sidebar_styles["nav_button_expanded"])
             btn.clicked.connect(lambda checked, idx=i: self.navigate_to_page(idx))
             self.nav_buttons.append(btn)
@@ -208,19 +206,19 @@ class MainWindow(QWidget):
     
     # NEW PAGES THROUGH BUTTONS
     def show_existing_flashcards(self):
-        """Show the Existing Flashcard page (index 6)"""
+        # Show the Existing Flashcard page (index 6)
         self.show_page(6)  # Existing Flashcards is at index 6
         if not self.sidebar_collapsed:
             self.collapse_sidebar()
     
     def show_create_flashcard(self):
-        """Show the create_flashcard_page page (index 5) """
+        # Show the create_flashcard_page page (index 5) 
         self.show_page(5)  # Create Flashcards is at index 5
         if not self.sidebar_collapsed:
             self.collapse_sidebar()
 
     def show_flashcard_study_with_set(self, flashcard_set):
-        """Update study page with specific flashcard set and show it"""
+        # Update study page with specific flashcard set and show it
         try:
             # Simply update the existing study page and show it
             self.flashcard_study_page.flashcard_set = flashcard_set
@@ -241,7 +239,7 @@ class MainWindow(QWidget):
             print(f"Error: {e}")
 
     def toggle_pomodoro_timer(self):
-        """Toggle between start and pause for the Pomodoro timer"""
+        # Toggle between start and pause for the Pomodoro timer
         if self.pomodoro_timer.timer_running:
             # Timer is running, so pause it
             if self.pomodoro_timer.pause_timer():
@@ -252,11 +250,11 @@ class MainWindow(QWidget):
                 self.pomodoro_btn.setText("⏸ Pause")
 
     def show_timer_settings(self):
-        """Show the Pomodoro timer settings dialog"""
+        # Show the Pomodoro timer settings dialog
         self.pomodoro_timer.show_settings(self)
 
     def show_multiple_choice_study(self, flashcard_set):
-        """Show multiple choice study interface"""
+        # Show multiple choice study interface
         try:            
             # Update the existing multiple choice page with the flashcard set
             self.multiple_choice_study_page.update_flashcard_set(flashcard_set)
