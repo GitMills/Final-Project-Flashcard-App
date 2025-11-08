@@ -1,225 +1,71 @@
 [
     {
         "set_name": "Sample",
-        "created_date": "2025-11-07 00:50:20",
+        "created_date": "2025-11-08 18:31:28",
         "cards": [
             {
-                "question": "Question 1",
-                "answer": "Answer 1",
-                "progress": {
-                    "learned": false,
-                    "times_correct": 41,
-                    "times_wrong": 29
-                }
+                "question": "Question 1 hatdog 123",
+                "answer": "Answer 1 betlog 78"
             },
             {
                 "question": "Question 2",
-                "answer": "Question 2",
-                "progress": {
-                    "learned": false,
-                    "times_correct": 38,
-                    "times_wrong": 30
-                }
-            },
-            {
-                "question": "Question 2",
-                "answer": "Question 2",
-                "progress": {
-                    "learned": false,
-                    "times_correct": 38,
-                    "times_wrong": 27
-                }
-            },
-            {
-                "question": "Question 4",
-                "answer": "Question 4",
-                "progress": {
-                    "learned": false,
-                    "times_correct": 32,
-                    "times_wrong": 29
-                }
-            }
-        ]
-    },
-    {
-        "set_name": "Sample 10 Questions",
-        "created_date": "2025-11-07 01:34:55",
-        "cards": [
-            {
-                "question": "Questions 1",
-                "answer": "Questions 1"
-            },
-            {
-                "question": "Questions 2",
-                "answer": "Questions 2"
-            },
-            {
-                "question": "Questions 3",
-                "answer": "Questions 3"
-            },
-            {
-                "question": "Questions 4",
-                "answer": "Questions 4"
-            },
-            {
-                "question": "Questions 5",
-                "answer": "Questions 5"
-            },
-            {
-                "question": "Questions 6",
-                "answer": "Questions 6"
-            },
-            {
-                "question": "Questions 7",
-                "answer": "Questions 7"
-            },
-            {
-                "question": "Questions 8",
-                "answer": "Questions 8"
-            },
-            {
-                "question": "Questions 9",
-                "answer": "Questions 9"
-            },
-            {
-                "question": "Questions 10",
-                "answer": "Questions 10"
-            }
-        ]
-    },
-    {
-        "set_name": "dasdasd",
-        "created_date": "2025-11-08 15:11:10",
-        "cards": [
-            {
-                "question": "adasd",
                 "answer": "asdas"
             },
             {
-                "question": "sadas",
+                "question": "Question 2",
+                "answer": "Question 2sadas"
+            },
+            {
+                "question": "Question 4",
+                "answer": "Question 4asd"
+            }
+        ]
+    },
+    {
+        "set_name": "222222",
+        "created_date": "2025-11-08 18:34:48",
+        "cards": [
+            {
+                "question": "asdas",
+                "answer": "asd"
+            },
+            {
+                "question": "asda",
+                "answer": "dasssssas"
+            },
+            {
+                "question": "asdas",
                 "answer": "dasd"
             },
             {
                 "question": "asdas",
-                "answer": "dasdasdasd"
+                "answer": "dasdas"
             },
             {
-                "question": "asdasdas",
-                "answer": "d"
-            },
-            {
-                "question": "asdas",
-                "answer": "dasdasdasd"
-            }
-        ]
-    },
-    {
-        "set_name": "dasdas",
-        "created_date": "2025-11-08 15:11:16",
-        "cards": [
-            {
-                "question": "dasd",
-                "answer": "asdasasd"
-            },
-            {
-                "question": "asdas",
-                "answer": "da"
-            },
-            {
-                "question": "dasdas",
-                "answer": "dasdasdas"
-            },
-            {
-                "question": "dasd",
+                "question": "dawdwadaw",
                 "answer": "asdasdas"
             }
         ]
     },
     {
-        "set_name": "asdasdas",
-        "created_date": "2025-11-08 15:11:22",
+        "set_name": "dawdaw",
+        "created_date": "2025-11-08 18:35:09",
         "cards": [
             {
-                "question": "asdasd",
-                "answer": "asd"
+                "question": "dawdaw",
+                "answer": "awdwa"
             },
             {
-                "question": "dasdas",
-                "answer": "asdas"
+                "question": "dawdaw",
+                "answer": "dawd"
             },
             {
-                "question": "asdasd",
-                "answer": "ad"
+                "question": "dawd",
+                "answer": "awdaw"
             },
             {
-                "question": "asdas",
-                "answer": "asdasd"
-            }
-        ]
-    },
-    {
-        "set_name": "assadasdas",
-        "created_date": "2025-11-08 15:11:29",
-        "cards": [
-            {
-                "question": "asd",
-                "answer": "asdasd"
-            },
-            {
-                "question": "asdas",
-                "answer": "asdasd"
-            },
-            {
-                "question": "das",
-                "answer": "dasdasda"
-            },
-            {
-                "question": "adas",
-                "answer": "dasdasdasda"
-            }
-        ]
-    },
-    {
-        "set_name": "asdasdasd",
-        "created_date": "2025-11-08 15:11:36",
-        "cards": [
-            {
-                "question": "asdas",
-                "answer": "asd"
-            },
-            {
-                "question": "asdasdasd",
-                "answer": "asd"
-            },
-            {
-                "question": "dasdasd",
-                "answer": "dasd"
-            },
-            {
-                "question": "asdasd",
-                "answer": "asdas"
-            }
-        ]
-    },
-    {
-        "set_name": "dasdasdas",
-        "created_date": "2025-11-08 15:11:43",
-        "cards": [
-            {
-                "question": "asdas",
-                "answer": "das"
-            },
-            {
-                "question": "dasdasdas",
-                "answer": "dasdas"
-            },
-            {
-                "question": "das",
-                "answer": "dasdasdas"
-            },
-            {
-                "question": "dasdas",
-                "answer": "sdas"
+                "question": "awdaw",
+                "answer": "dawdwa"
             }
         ]
     }

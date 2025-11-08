@@ -424,9 +424,39 @@ def get_all_cards_styles():
             }
         """,
         
-        "card_frame": """
+        "card_frame_1": """
             QFrame {
-                background: #FFE8E5;
+                background: #B3D9FF;
+                border-radius: 15px;
+                padding: 15px;
+                margin: 8px 5px;
+                min-width: 280px;
+            }
+        """,
+        
+        "card_frame_2": """
+            QFrame {
+                background: #B9FBC0;
+                border-radius: 15px;
+                padding: 15px;
+                margin: 8px 5px;
+                min-width: 280px;
+            }
+        """,
+        
+        "card_frame_3": """
+            QFrame {
+                background: #FFE6A7;
+                border-radius: 15px;
+                padding: 15px;
+                margin: 8px 5px;
+                min-width: 280px;
+            }
+        """,
+        
+        "card_frame_4": """
+            QFrame {
+                background: #FFB3B3;
                 border-radius: 15px;
                 padding: 15px;
                 margin: 8px 5px;
@@ -461,7 +491,7 @@ def get_all_cards_styles():
         
         "study_button": """
             QPushButton {
-                background-color: #98CEF5;
+                background-color: #ABABDE;
                 color: white;
                 font-size: 14px;
                 font-weight: 700;
@@ -478,7 +508,7 @@ def get_all_cards_styles():
 
         "delete_button": """
             QPushButton {
-                background-color: #F7A291;
+                background-color: #BA9C9C;
                 color: white;
                 font-size: 14px;
                 font-weight: 700;

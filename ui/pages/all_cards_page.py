@@ -133,7 +133,22 @@ class AllCards(QWidget):
     def create_set_card(self, flashcard_set):
         # Create a styled card for a flashcard set
         card_frame = QFrame()
-        card_frame.setStyleSheet(self.styles["card_frame"])
+        
+        # Get current grid position
+        total_cards = self.sets_layout.count()
+        row = total_cards // 2  # Integer division for row number
+        color_index = row % 4   # Cycle through 4 colors per row
+        
+        # Apply the color using the style system
+        if color_index == 0:
+            card_frame.setStyleSheet(self.styles["card_frame_1"])  # Blue
+        elif color_index == 1:
+            card_frame.setStyleSheet(self.styles["card_frame_2"])  # Green
+        elif color_index == 2:
+            card_frame.setStyleSheet(self.styles["card_frame_3"])  # Yellow
+        else:
+            card_frame.setStyleSheet(self.styles["card_frame_4"])  # Red
+        
         card_frame.setMinimumWidth(200)
         
         card_layout = QVBoxLayout(card_frame)
@@ -170,7 +185,7 @@ class AllCards(QWidget):
         card_layout.addLayout(button_layout)
         
         return card_frame
-    
+        
     def study_set(self, flashcard_set):
         print(f"Study set clicked: {flashcard_set['set_name']}")  
 
@@ -217,6 +232,12 @@ class AllCards(QWidget):
             
             buttons_layout.addWidget(mc_btn)
             
+            # NEW: View/Edit button
+            view_edit_btn = QPushButton("View/Edit Flashcards")
+            view_edit_btn.setStyleSheet(self.styles["study_button"])
+            view_edit_btn.clicked.connect(lambda: self.start_view_edit(flashcard_set, study_dialog))
+            buttons_layout.addWidget(view_edit_btn)
+            
             # Cancel button
             cancel_btn = QPushButton("Cancel")
             cancel_btn.setStyleSheet(self.styles["delete_button"])
@@ -231,6 +252,69 @@ class AllCards(QWidget):
         except Exception as e:
             import traceback
             traceback.print_exc()
+
+    def start_view_edit(self, flashcard_set, dialog):
+        """Transfer to Create Flashcard page with existing set data for editing"""
+        dialog.accept()
+        
+        # Import here to avoid circular imports
+        from ui.pages.create_flashcard_page import CreateFlashcard
+        
+        # Find the create flashcard page in the main window stack
+        create_page = None
+        for i in range(self.main_window.pages_stack.count()):
+            widget = self.main_window.pages_stack.widget(i)
+            if isinstance(widget, CreateFlashcard):
+                create_page = widget
+                break
+        
+        if create_page:
+            # Load the existing flashcard set into the create page
+            self.load_flashcards_into_create_page(create_page, flashcard_set)
+            # Switch to create flashcard page
+            self.main_window.show_page(5)  # Index of create flashcard page
+        else:
+            QMessageBox.warning(self, "Error", "Could not access create flashcard page")
+
+    def load_flashcards_into_create_page(self, create_page, flashcard_set):
+        """Load existing flashcard set data into the create page for editing"""
+        try:
+            # Clear existing form
+            create_page.reset_form()
+            
+            # Set the flashcard set name
+            create_page.name_input.setText(flashcard_set['set_name'])
+            
+            # Remove the initial 4 empty cards (since we're loading existing ones)
+            for i in range(create_page.scroll_layout.count() - 1, -1, -1):
+                item = create_page.scroll_layout.itemAt(i)
+                if item and item.widget():
+                    widget = item.widget()
+                    if isinstance(widget, QFrame) and hasattr(widget, 'question_input'):
+                        create_page.scroll_layout.removeWidget(widget)
+                        widget.deleteLater()
+            
+            # Reset card counter
+            create_page.current_card_number = 1
+            
+            # Add cards from the existing set
+            for card in flashcard_set['cards']:
+                create_page.add_flashcard_input()
+                
+                # Get the most recently added card frame
+                last_item = create_page.scroll_layout.itemAt(create_page.scroll_layout.count() - 1)
+                if last_item and last_item.widget():
+                    card_frame = last_item.widget()
+                    if hasattr(card_frame, 'question_input') and hasattr(card_frame, 'answer_input'):
+                        # Populate with existing data
+                        card_frame.question_input.setText(card['question'])
+                        card_frame.answer_input.setPlainText(card['answer'])
+            
+            # Store the original set name for update purposes
+            create_page.original_set_name = flashcard_set['set_name']
+            
+        except Exception as e:
+            QMessageBox.critical(self, "Error", f"Failed to load flashcards for editing: {str(e)}")
 
     def show_mc_warning(self, dialog):
         # Show warning when not enough cards for multiple choice

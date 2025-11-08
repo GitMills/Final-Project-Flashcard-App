@@ -255,36 +255,20 @@ class CreateFlashcard(QWidget):
 
     def save_all_flashcards(self):
         try:
+            # Debug info
+            is_editing = hasattr(self, 'original_set_name') and self.original_set_name
+            original_name = self.original_set_name if is_editing else "None"
+            print(f"DEBUG: Saving - Editing: {is_editing}, Original: '{original_name}', New: '{self.name_input.text().strip()}'")
+            
             # Collect flashcard data from the form
             self.flashcards = []
             set_name = self.name_input.text().strip()
             
             # Validate set name
             if not set_name:
-                missing_set_warning = QMessageBox(self)
-                missing_set_warning.setWindowTitle("Missing Set Name")
-                missing_set_warning.setText("Please enter a name for your flashcard set.")
-                missing_set_warning.setStyleSheet(self.styles["warning_message_box"])
-                missing_set_warning.setIcon(QMessageBox.Icon.Warning)
-                missing_set_warning.setStandardButtons(QMessageBox.StandardButton.Ok)
-                
-                # Load custom icon
-                icon_path = get_asset_path("warning_icon.png")  
-                custom_icon = QPixmap(icon_path)
-                
-                if not custom_icon.isNull():
-                    # RESPONSIVE ICON SCALING
-                    screen = self.main_window.screen()
-                    screen_size = screen.availableGeometry()
-                    icon_size = int(min(screen_size.width(), screen_size.height()) * 0.05)  # 5% of screen
-                    missing_set_warning.setIconPixmap(custom_icon.scaled(icon_size, icon_size, Qt.AspectRatioMode.KeepAspectRatio))
-                else:
-                    missing_set_warning.setIcon(QMessageBox.Icon.Information)
-                
-                missing_set_warning.setStandardButtons(QMessageBox.StandardButton.Ok)
-                missing_set_warning.exec()
+                self.show_warning_message("Missing Set Name", "Please enter a name for your flashcard set.")
                 return
-        
+            
             # Count valid flashcards
             valid_cards = 0
             for i in range(self.scroll_layout.count()):
@@ -307,86 +291,83 @@ class CreateFlashcard(QWidget):
             
             # Validate we have at least 4 flashcards
             if valid_cards < 4:
-                min_cards_warning = QMessageBox(self)
-                min_cards_warning.setWindowTitle("Not Enough Flashcards")
-                min_cards_warning.setText(f"You need at least 4 flashcards. You currently have {valid_cards} valid card(s).")
-                min_cards_warning.setStyleSheet(self.styles["warning_message_box"])
-                min_cards_warning.setIcon(QMessageBox.Icon.Warning)
-                min_cards_warning.setStandardButtons(QMessageBox.StandardButton.Ok)
-                    
-                # Load custom icon  
-                icon_path = get_asset_path("warning_icon.png")  
-                custom_icon = QPixmap(icon_path)
-                
-                if not custom_icon.isNull():
-                    # RESPONSIVE ICON SCALING
-                    screen = self.main_window.screen()
-                    screen_size = screen.availableGeometry()
-                    icon_size = int(min(screen_size.width(), screen_size.height()) * 0.05)  # 5% of screen
-                    min_cards_warning.setIconPixmap(custom_icon.scaled(icon_size, icon_size, Qt.AspectRatioMode.KeepAspectRatio))
-                else:
-                    min_cards_warning.setIcon(QMessageBox.Icon.Information)
-                    
-                min_cards_warning.setStandardButtons(QMessageBox.StandardButton.Ok)
-                min_cards_warning.exec()
+                self.show_warning_message("Not Enough Flashcards", 
+                                        f"You need at least 4 flashcards. You currently have {valid_cards} valid card(s).")
                 return
             
             # Use controller to save the flashcard set
             from core.controller import FlashcardController
             controller = FlashcardController()
-            error_message = controller.create_flashcard_set(set_name, self.flashcards)
+            
+            # CHECK IF WE'RE UPDATING AN EXISTING SET
+            if hasattr(self, 'original_set_name') and self.original_set_name:
+                print(f"DEBUG: Updating set - deleting original: '{self.original_set_name}'")
+                
+                # Always delete the original set first when editing
+                delete_error = controller.delete_flashcard_set(self.original_set_name)
+                
+                if delete_error:
+                    self.show_warning_message("Update Error", f"Failed to update flashcard set:\n{delete_error}")
+                    return
+                
+                # Then create the updated set
+                error_message = controller.create_flashcard_set(set_name, self.flashcards)
+                
+                # Clear the original set name after successful update
+                if not error_message:
+                    print(f"DEBUG: Successfully updated set to: '{set_name}'")
+                    self.original_set_name = None
+            else:
+                print(f"DEBUG: Creating new set: '{set_name}'")
+                # Original create new set logic
+                error_message = controller.create_flashcard_set(set_name, self.flashcards)
             
             if error_message:
-                save_error_warning = QMessageBox(self)
-                save_error_warning.setWindowTitle("Save Error")
-                save_error_warning.setText(f"Failed to save flashcard set:\n{error_message}")
-                save_error_warning.setStyleSheet(self.styles["warning_message_box"])
-                save_error_warning.setIcon(QMessageBox.Icon.Warning)
-                save_error_warning.setStandardButtons(QMessageBox.StandardButton.Ok)
-                
-                # Load custom icon
-                icon_path = get_asset_path("warning_icon.png")  
-                custom_icon = QPixmap(icon_path)
-                
-                if not custom_icon.isNull():
-                    # RESPONSIVE ICON SCALING
-                    screen = self.main_window.screen()
-                    screen_size = screen.availableGeometry()
-                    icon_size = int(min(screen_size.width(), screen_size.height()) * 0.05)  # 5% of screen
-                    save_error_warning.setIconPixmap(custom_icon.scaled(icon_size, icon_size, Qt.AspectRatioMode.KeepAspectRatio))
-                else:
-                    save_error_warning.setIcon(QMessageBox.Icon.Information)
-                
-                save_error_warning.setStandardButtons(QMessageBox.StandardButton.Ok)
-                save_error_warning.exec()
+                self.show_warning_message("Save Error", f"Failed to save flashcard set:\n{error_message}")
             else:
                 # SUCCESS MESSAGE BOX
                 self.show_save_success(set_name, len(self.flashcards))
                 self.reset_form()
+                
+                # IMPORTANT: Refresh the AllCards page to show updated sets
+                self.refresh_all_cards_page()
 
         except Exception as e:
-            critical_error_warning = QMessageBox(self)
-            critical_error_warning.setWindowTitle("Critical Error")
-            critical_error_warning.setText(f"The app encountered an error:\n{str(e)}")
-            critical_error_warning.setStyleSheet(self.styles["warning_message_box"])
-            critical_error_warning.setIcon(QMessageBox.Icon.Warning)
-            critical_error_warning.setStandardButtons(QMessageBox.StandardButton.Ok)
-            
-            # Load custom icon
-            icon_path = get_asset_path("warning_icon.png")  
-            custom_icon = QPixmap(icon_path)
-            
-            if not custom_icon.isNull():
-                # RESPONSIVE ICON SCALING
-                screen = self.main_window.screen()
-                screen_size = screen.availableGeometry()
-                icon_size = int(min(screen_size.width(), screen_size.height()) * 0.05)  # 5% of screen
-                critical_error_warning.setIconPixmap(custom_icon.scaled(icon_size, icon_size, Qt.AspectRatioMode.KeepAspectRatio))
-            else:
-                critical_error_warning.setIcon(QMessageBox.Icon.Information)
-            
-            critical_error_warning.setStandardButtons(QMessageBox.StandardButton.Ok)
-            critical_error_warning.exec()
+            self.show_warning_message("Critical Error", f"The app encountered an error:\n{str(e)}")
+
+    def refresh_all_cards_page(self):
+        """Refresh the AllCards page to show updated flashcard sets"""
+        # Find the AllCards page in the main window stack
+        all_cards_page = None
+        for i in range(self.main_window.pages_stack.count()):
+            widget = self.main_window.pages_stack.widget(i)
+            if hasattr(widget, '__class__') and widget.__class__.__name__ == 'AllCards':
+                all_cards_page = widget
+                break
+        
+        if all_cards_page and hasattr(all_cards_page, 'load_flashcards'):
+            all_cards_page.load_flashcards()
+
+    def show_warning_message(self, title, message):
+        """Helper method to show warning messages"""
+        msg_box = QMessageBox(self)
+        msg_box.setWindowTitle(title)
+        msg_box.setText(message)
+        msg_box.setStyleSheet(self.styles["warning_message_box"])
+        msg_box.setIcon(QMessageBox.Icon.Warning)
+        
+        # Load custom icon
+        icon_path = get_asset_path("warning_icon.png")  
+        custom_icon = QPixmap(icon_path)
+        
+        if not custom_icon.isNull():
+            screen = self.main_window.screen()
+            screen_size = screen.availableGeometry()
+            icon_size = int(min(screen_size.width(), screen_size.height()) * 0.05)
+            msg_box.setIconPixmap(custom_icon.scaled(icon_size, icon_size, Qt.AspectRatioMode.KeepAspectRatio))
+        
+        msg_box.setStandardButtons(QMessageBox.StandardButton.Ok)
+        msg_box.exec()
 
     def show_save_success(self, set_name, card_count):
         msg_box = QMessageBox(self)
@@ -458,6 +439,10 @@ class CreateFlashcard(QWidget):
         
         # Reset card counter
         self.current_card_number = 1
+        
+        # Clear original set name when resetting
+        if hasattr(self, 'original_set_name'):
+            self.original_set_name = None
         
         # Create 4 new flashcards
         self.create_flashcard_inputs()

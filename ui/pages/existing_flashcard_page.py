@@ -159,9 +159,21 @@ class ExistingFlashcard(QWidget):
         # Utility to clear the scroll layout cleanly.
         while self.scroll_layout.count():
             item = self.scroll_layout.takeAt(0)
-            widget = item.widget()
-            if widget:
+            if item.widget():
+                widget = item.widget()
+                widget.setParent(None)
                 widget.deleteLater()
+            elif item.layout():
+                # Clear sub-layout
+                sub_layout = item.layout()
+                while sub_layout.count():
+                    sub_item = sub_layout.takeAt(0)
+                    if sub_item.widget():
+                        sub_widget = sub_item.widget()
+                        sub_widget.setParent(None)
+                        sub_widget.deleteLater()
+                # Remove the layout itself
+                sub_layout.setParent(None)
 
     def show_topics(self):
         # Restore the original topic list.
