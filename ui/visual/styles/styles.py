@@ -1,5 +1,7 @@
 # FINAL PROJECT FLASHCARD APP / ui / visual / styles / styles.py
 
+# FINAL PROJECT FLASHCARD APP / ui / visual / styles / styles.py
+
 
 def get_sidebar_styles():
     return {
@@ -869,4 +871,95 @@ def get_multiple_choice_styles():
                 background-color: #5D4037;
             }
         """
+    }
+
+def get_existing_flashcard_styles():
+    return {
+        # === Main Page ===
+        "page": "background-color: #FFF7EB;",
+
+        # Back Button (main and topic views)
+        "back_button": """
+            QPushButton {
+                background-color: #F27D72;
+                color: white;
+                border-radius: 10px;
+                padding: 10px 20px;
+                font-weight: bold;
+            }
+            QPushButton:hover { background-color: #d25a50; }
+        """,
+
+        # Title label ("TOPICS")
+        "title": """
+            QLabel {
+                font-size: 24px;
+                font-weight: bold;
+                background-color: #F27D72;
+                color: white;
+                border-radius: 15px;
+                padding: 15px;
+            }
+        """,
+
+        # Topic buttons (English, Math, etc.)
+        "topic_button": """
+            QPushButton {{
+                background-color: {color};
+                border: none;
+                border-radius: 25px;
+                font-size: 20px;
+                font-weight: bold;
+                color: #333;
+                text-align: left;
+                padding-left: 30px;
+            }}
+            QPushButton:hover {{
+                background-color: #dfefff;
+            }}
+        """,
+
+        # Flashcard appearance
+        "flashcard": """
+            QFrame {
+                background-color: #FDE3E3;
+                border-radius: 20px;
+            }
+            QLabel {
+                font-size: 16px;
+                color: #333;
+            }
+        """,
+
+        # Topic header title in study view
+        "topic_title": "font-weight: bold; color: #9C9AC2; font-size: 20px;",
+        "timer_label": "color: #5f5f5f; font-size: 14px;",
+
+        # Control buttons (shuffle, correct, wrong, reset)
+        "control_button": """
+            QPushButton {{
+                background-color: {color};
+                border-radius: 10px;
+                font-size: 16px;
+                font-weight: bold;
+                color: black;
+            }}
+            QPushButton:hover {{
+                opacity: 0.8;
+            }}
+        """,
+
+        # Progress bar
+        "progress_bar": """
+            QProgressBar {
+                border: none;
+                height: 18px;
+                border-radius: 8px;
+                background-color: #DDD;
+            }
+            QProgressBar::chunk {
+                background-color: #55556A;
+                border-radius: 8px;
+            }
+        """,
     }
