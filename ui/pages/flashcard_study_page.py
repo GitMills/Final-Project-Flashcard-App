@@ -15,8 +15,14 @@ class FlashcardStudyPage(QWidget):
         self.is_flipped = False
         self.styles = get_study_page_styles()
         
+        # Hybrid hint system variables
+        self.current_hint_level = 0
+        self.max_hint_level = 1
+        self.hint_strategy = 'word_by_word'
+        self.answer_words = ['']
+        
         # Simple progress tracking
-        self.card_progress = {}  # Track correct counts per card
+        self.card_progress = {}
         
         self.setup_ui()
         if self.flashcard_set and self.flashcard_set['cards']:
@@ -69,7 +75,7 @@ class FlashcardStudyPage(QWidget):
         
         layout.addLayout(card_area_layout)
         
-        # CONTROLS BELOW PROGRESS BAR - Horizontal: Shuffle, Correct, Wrong, Reset
+        # CONTROLS BELOW PROGRESS BAR - Horizontal: Shuffle, Hint, Correct, Wrong, Reset
         controls_layout = QHBoxLayout()
         controls_layout.addStretch()
         
@@ -78,12 +84,18 @@ class FlashcardStudyPage(QWidget):
         self.shuffle_btn.setStyleSheet(self.styles["shuffle_button"])
         self.shuffle_btn.clicked.connect(self.shuffle_cards)
         controls_layout.addWidget(self.shuffle_btn)
-        
+
         # Correct button
         self.correct_btn = QPushButton("Correct")
         self.correct_btn.setStyleSheet(self.styles["correct_button"])
         self.correct_btn.clicked.connect(lambda: self.mark_card(True))
         controls_layout.addWidget(self.correct_btn)
+        
+        # HINT BUTTON - Hybrid system
+        self.hint_btn = QPushButton("Show Hint")
+        self.hint_btn.setStyleSheet(self.styles["hint_button"])
+        self.hint_btn.clicked.connect(self.show_hint)
+        controls_layout.addWidget(self.hint_btn)
         
         # Wrong button
         self.wrong_btn = QPushButton("Wrong")
@@ -127,10 +139,17 @@ class FlashcardStudyPage(QWidget):
         self.front_label.setWordWrap(True)
         self.front_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         front_layout.addWidget(self.front_label)
+        
+        # HINT LABEL - For hybrid system
+        self.hint_label = QLabel()
+        self.hint_label.setStyleSheet(self.styles["hint_text"])
+        self.hint_label.setWordWrap(True)
+        self.hint_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.hint_label.hide()
+        front_layout.addWidget(self.hint_label)
+        
         self.front_counter.setFixedHeight(15) 
 
-        
-        
         # Create back card with counter
         self.card_back = QFrame()
         self.card_back.setStyleSheet(self.styles["card_back"])
@@ -144,7 +163,6 @@ class FlashcardStudyPage(QWidget):
         back_layout.addWidget(self.back_counter)
         self.back_counter.setFixedHeight(15)
 
-        
         # Back content
         self.back_label = QLabel()
         self.back_label.setStyleSheet(self.styles["card_text"])
@@ -161,9 +179,14 @@ class FlashcardStudyPage(QWidget):
         flip_layout.addWidget(self.card_front)
         flip_layout.addWidget(self.card_back)
         
-        # Click to flip
-        self.card_front.mousePressEvent = lambda e: self.flip_card()
-        self.card_back.mousePressEvent = lambda e: self.flip_card()
+        # FIXED: Proper click handling for flip
+        self.card_front.mousePressEvent = self.handle_flip_click
+        self.card_back.mousePressEvent = self.handle_flip_click
+    
+    def handle_flip_click(self, event):
+        """Handle click events for both front and back cards"""
+        self.flip_card()
+        event.accept()
     
     def flip_card(self):
         if self.is_flipped:
@@ -174,27 +197,153 @@ class FlashcardStudyPage(QWidget):
             self.card_back.show()
         self.is_flipped = not self.is_flipped
     
+    def analyze_answer_type(self, answer):
+        """Determine if answer is single word or sentence and choose hint strategy"""
+        try:
+            if not answer or not isinstance(answer, str):
+                return 'word_by_word', [''], 1
+                
+            clean_answer = answer.strip()
+            if not clean_answer:
+                return 'word_by_word', [''], 1
+                
+            words = clean_answer.split()
+            
+            # Single word: just one word with reasonable length
+            if len(words) == 1 and len(clean_answer) <= 20:
+                return 'letter_by_letter', [clean_answer], len(clean_answer)
+            
+            # Sentence: use word-by-word revelation
+            else:
+                return 'word_by_word', words, len(words)
+                
+        except Exception as e:
+            print(f"Error analyzing answer type: {e}")
+            return 'word_by_word', [answer], 1
+    
     def load_card(self, index):
-        if not self.flashcard_set or not self.flashcard_set['cards']:
-            self.front_label.setText("No flashcards available")
-            self.back_label.setText("Please select a flashcard set first")
-            return
+        try:
+            if not self.flashcard_set or not self.flashcard_set['cards']:
+                self.front_label.setText("No flashcards available")
+                self.back_label.setText("Please select a flashcard set first")
+                return
+                
+            if 0 <= index < len(self.flashcard_set['cards']):
+                self.current_card_index = index
+                card = self.flashcard_set['cards'][index]
+                
+                self.front_label.setText(f"{card['question']}")
+                self.back_label.setText(f"{card['answer']}")
+                
+                # Analyze answer and set up HYBRID hint system
+                answer = card['answer'].strip()
+                self.hint_strategy, self.answer_words, self.max_hint_level = self.analyze_answer_type(answer)
+                
+                # Reset hint state
+                self.current_hint_level = 0
+                self.hint_label.hide()
+                self.hint_btn.setText("Show Hint")
+                self.hint_btn.setEnabled(True)
+                
+                # Reset flip state
+                self.is_flipped = False
+                self.card_front.show()
+                self.card_back.hide()
+                
+                # Update UI
+                self.update_card_counter()
+                self.update_progress()
+                
+        except Exception as e:
+            print(f"Error loading card: {e}")
+            self.front_label.setText("Error loading card")
+            self.back_label.setText("Please try another card")
+    
+    def show_hint(self):
+        """HYBRID SYSTEM: Show hint using appropriate strategy based on answer type"""
+        try:
+            if not self.flashcard_set or not self.flashcard_set['cards']:
+                return
+                
+            self.current_hint_level += 1
             
-        if 0 <= index < len(self.flashcard_set['cards']):
-            self.current_card_index = index
-            card = self.flashcard_set['cards'][index]
+            # Ensure we don't exceed bounds
+            self.current_hint_level = min(self.current_hint_level, self.max_hint_level)
             
-            self.front_label.setText(f"Q: {card['question']}")
-            self.back_label.setText(f"A: {card['answer']}")
+            if self.hint_strategy == 'letter_by_letter':
+                self._show_letter_hint()
+            else:  # word_by_word
+                self._show_word_hint()
             
-            # Reset flip state
-            self.is_flipped = False
-            self.card_front.show()
-            self.card_back.hide()
+            # Update button
+            if self.current_hint_level >= self.max_hint_level:
+                self.hint_btn.setText("Full Answer")
+                self.hint_btn.setEnabled(False)
+            else:
+                self.hint_btn.setText(f"Show Hint ({self.current_hint_level}/{self.max_hint_level})")
+                
+        except Exception as e:
+            print(f"Error showing hint: {e}")
+            self.hint_label.setText("Error showing hint")
+            self.hint_label.show()
+    
+    def _show_letter_hint(self):
+        """Letter-by-letter hint for single words"""
+        try:
+            if not self.answer_words or not self.answer_words[0]:
+                self.hint_label.setText("<b>Hint:</b> No hint available")
+                self.hint_label.show()
+                return
+                
+            word = self.answer_words[0]
+            if self.current_hint_level >= len(word):
+                # Full word revealed
+                hint_text = f"<b>Hint:</b> {word}"
+            else:
+                # Partial reveal with underscores
+                revealed = word[:self.current_hint_level]
+                remaining = " ".join(["_"] * (len(word) - self.current_hint_level))
+                hint_text = f"<b>Hint:</b> {revealed} {remaining}"
             
-            # Update UI
-            self.update_card_counter()
-            self.update_progress()
+            self.hint_label.setText(hint_text)
+            self.hint_label.show()
+            
+        except Exception as e:
+            print(f"Error in letter hint: {e}")
+            self.hint_label.setText("<b>Hint:</b> Error")
+            self.hint_label.show()
+    
+    def _show_word_hint(self):
+        """Word-by-word hint for sentences"""
+        try:
+            if not self.answer_words:
+                self.hint_label.setText("<b>Hint:</b> No hint available")
+                self.hint_label.show()
+                return
+                
+            # Ensure we don't go out of bounds
+            safe_hint_level = min(self.current_hint_level, len(self.answer_words))
+            revealed_words = self.answer_words[:safe_hint_level]
+            remaining_count = len(self.answer_words) - safe_hint_level
+            
+            # Create the hint display
+            if safe_hint_level >= len(self.answer_words):
+                # Full sentence revealed
+                full_sentence = " ".join(self.answer_words)
+                hint_text = f"<b>Hint:</b> {full_sentence}"
+            else:
+                # Partial reveal with blanks for remaining words
+                revealed_part = " ".join(revealed_words)
+                blanks = " ".join(["_____"] * remaining_count)
+                hint_text = f"<b>Hint:</b> {revealed_part} {blanks}"
+            
+            self.hint_label.setText(hint_text)
+            self.hint_label.show()
+            
+        except Exception as e:
+            print(f"Error in word hint: {e}")
+            self.hint_label.setText("<b>Hint:</b> Error")
+            self.hint_label.show()
     
     def update_card_counter(self):
         total = len(self.flashcard_set['cards'])
@@ -266,6 +415,7 @@ class FlashcardStudyPage(QWidget):
                 self.back_label.setText(f"You've mastered all {len(self.flashcard_set['cards'])} cards!")
                 self.correct_btn.setEnabled(False)
                 self.wrong_btn.setEnabled(False)
+                self.hint_btn.setEnabled(False)
             else:
                 # Loop back to beginning
                 self.load_card(0)
@@ -275,6 +425,7 @@ class FlashcardStudyPage(QWidget):
         self.load_card(0)
         self.correct_btn.setEnabled(True)
         self.wrong_btn.setEnabled(True)
+        self.hint_btn.setEnabled(True)
     
     def reset_progress(self):
         from core.controller import FlashcardController
@@ -301,6 +452,7 @@ class FlashcardStudyPage(QWidget):
         self.load_card(0)
         self.correct_btn.setEnabled(True)
         self.wrong_btn.setEnabled(True)
+        self.hint_btn.setEnabled(True)
 
     
     def go_back(self):

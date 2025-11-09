@@ -597,6 +597,27 @@ def get_all_cards_styles():
             QMessageBox QPushButton:hover {
                 background-color: #7BBFA1;
             }
+        ""","search_input": """
+            QLineEdit {
+                background-color: #E3D3C3;
+                border: 2px solid #A2A8D3;
+                border-radius: 8px;
+                padding: 8px 12px;
+                font-size: 18px;
+                min-width: 300px;
+                color:  black;
+            }
+            QLineEdit:focus {
+                border-color: #585B70;
+            }
+        """,
+        "no_results_label": """
+            QLabel {
+                color: #F38BA8;
+                font-size: 18px;
+                font-weight: 600;
+                padding: 20px;
+            }
         """
     }
 
@@ -654,15 +675,13 @@ def get_study_page_styles():
                 font-size: 14px;
                 font-weight: 600;
                 border-radius: 12px;
-                padding: 10px 16px;
-                min-height: 40px;
-                min-width: 120px;
+                padding: 12px 20px;
+                min-height: 45px;
+                min-width: 100px;
                 margin: 5px;
-                border: 2px solid #6C7086;
             }
             QPushButton:hover {
                 background-color: #6C7086;
-                border: 2px solid #89B4FA;
             }
             QPushButton:pressed {
                 background-color: #45475A;
@@ -680,11 +699,9 @@ def get_study_page_styles():
                 min-height: 45px;
                 min-width: 100px;
                 margin: 5px;
-                border: 2px solid #94E2D5;
             }
             QPushButton:hover {
                 background-color: #94E2D5;
-                border: 2px solid #74C7EC;
             }
             QPushButton:pressed {
                 background-color: #89DCEB;
@@ -702,11 +719,9 @@ def get_study_page_styles():
                 min-height: 45px;
                 min-width: 100px;
                 margin: 5px;
-                border: 2px solid #F5C2E7;
             }
             QPushButton:hover {
                 background-color: #F5C2E7;
-                border: 2px solid #CBA6F7;
             }
             QPushButton:pressed {
                 background-color: #CBA6F7;
@@ -720,15 +735,13 @@ def get_study_page_styles():
                 font-size: 14px;
                 font-weight: 600;
                 border-radius: 12px;
-                padding: 10px 16px;
-                min-height: 40px;
-                min-width: 120px;
+                padding: 12px 20px;
+                min-height: 45px;
+                min-width: 100px;
                 margin: 5px;
-                border: 2px solid #6C7086;
             }
             QPushButton:hover {
                 background-color: #6C7086;
-                border: 2px solid #89B4FA;
             }
             QPushButton:pressed {
                 background-color: #45475A;
@@ -742,15 +755,13 @@ def get_study_page_styles():
                 font-size: 14px;
                 font-weight: 700;
                 border-radius: 12px;
-                padding: 10px 16px;
-                min-height: 40px;
-                min-width: 120px;
+                padding: 12px 20px;
+                min-height: 45px;
+                min-width: 100px;
                 margin: 5px;
-                border: 2px solid #F5C2E7;
             }
             QPushButton:hover {
                 background-color: #F5C2E7;
-                border: 2px solid #CBA6F7;
             }
             QPushButton:pressed {
                 background-color: #CBA6F7;
@@ -766,13 +777,11 @@ def get_study_page_styles():
             QCheckBox::indicator {
                 width: 16px;
                 height: 16px;
-                border: 2px solid #6C7086;
                 border-radius: 4px;
                 background-color: #313244;
             }
             QCheckBox::indicator:checked {
                 background-color: #A6E3A1;
-                border: 2px solid #94E2D5;
             }
         """,
         
@@ -798,10 +807,259 @@ def get_study_page_styles():
                 font-size: 24px;
                 background-color: transparent;
             }
+        """,
+
+        "hint_button": """
+            QPushButton {
+                background-color: #C3DCF4;
+                color: black;
+                font-size: 14px;
+                font-weight: 700;
+                border-radius: 12px;
+                padding: 12px 20px;
+                min-height: 45px;
+                min-width: 50px;
+                margin: 5px;
+            }
+            QPushButton:hover {
+                background-color: #9CC5EC;
+            }
+            QPushButton:pressed {
+                background-color: #76AFE5;
+            }
+        """,
+        
+        "hint_text": """
+            QLabel {
+                color: black;
+                font-size: 18px;
+                font-weight: 600;
+                border-radius: 10px;
+                padding: 10px;
+                margin: 5px;
+                border: 6px solid #FAFDE7;
+            }
+        """
+    }
+    return {
+        "title": """
+            QLabel {
+                font-size: 24px;
+                font-weight: 900;
+                color: #A2A8D3;
+                padding: 12px 0;
+                background-color: transparent;
+                border: none;
+            }
+        """,
+        
+        "progress_bar": """
+            QProgressBar {
+                border-radius: 10px;
+                text-align: center;
+                background-color: #313244;
+                height: 20px;
+            }
+            QProgressBar::chunk {
+                background-color: #A6E3A1;
+                border-radius: 8px;
+            }
+        """,
+        
+        "stats_label": """
+            QLabel {
+                color: #CDD6F4;
+                font-size: 14px;
+                font-weight: 600;
+                background-color: transparent;
+            }
+        """,
+        
+        "card_counter": """
+            QLabel {
+                color: #9C9191;
+                font-size: 14px;
+                font-weight: 600;
+                background-color: transparent;
+                margin: 0px;
+                padding: 1px 6px;
+            }
+        """,
+        
+        "shuffle_button": """
+            QPushButton {
+                background-color: #585B70;
+                color: #CDD6F4;
+                font-size: 14px;
+                font-weight: 600;
+                border-radius: 12px;
+                padding: 10px 16px;
+                min-height: 40px;
+                min-width: 120px;
+                margin: 5px;
+            }
+            QPushButton:hover {
+                background-color: #6C7086;
+            }
+            QPushButton:pressed {
+                background-color: #45475A;
+            }
+        """,
+        
+        "correct_button": """
+            QPushButton {
+                background-color: #A6E3A1;
+                color: #1E1E2E;
+                font-size: 14px;
+                font-weight: 700;
+                border-radius: 12px;
+                padding: 12px 20px;
+                min-height: 45px;
+                min-width: 100px;
+                margin: 5px;
+            }
+            QPushButton:hover {
+                background-color: #94E2D5;
+            }
+            QPushButton:pressed {
+                background-color: #89DCEB;
+            }
+        """,
+        
+        "wrong_button": """
+            QPushButton {
+                background-color: #F38BA8;
+                color: #1E1E2E;
+                font-size: 14px;
+                font-weight: 700;
+                border-radius: 12px;
+                padding: 12px 20px;
+                min-height: 45px;
+                min-width: 100px;
+                margin: 5px;
+            }
+            QPushButton:hover {
+                background-color: #F5C2E7;
+            }
+            QPushButton:pressed {
+                background-color: #CBA6F7;
+            }
+        """,
+        
+        "reset_button": """
+            QPushButton {
+                background-color: #585B70;
+                color: #CDD6F4;
+                font-size: 14px;
+                font-weight: 600;
+                border-radius: 12px;
+                padding: 10px 16px;
+                min-height: 40px;
+                min-width: 120px;
+                margin: 5px;
+            }
+            QPushButton:hover {
+                background-color: #6C7086;
+            }
+            QPushButton:pressed {
+                background-color: #45475A;
+            }
+        """,
+        
+        "back_button": """
+            QPushButton {
+                background-color: #F38BA8;
+                color: #1E1E2E;
+                font-size: 14px;
+                font-weight: 700;
+                border-radius: 12px;
+                padding: 10px 16px;
+                min-height: 40px;
+                min-width: 120px;
+                margin: 5px;
+            }
+            QPushButton:hover {
+                background-color: #F5C2E7;
+            }
+            QPushButton:pressed {
+                background-color: #CBA6F7;
+            }
+        """,
+        
+        "filter_checkbox": """
+            QCheckBox {
+                color: #CDD6F4;
+                font-size: 14px;
+                background-color: transparent;
+            }
+            QCheckBox::indicator {
+                width: 16px;
+                height: 16px;
+                border-radius: 4px;
+                background-color: #313244;
+            }
+            QCheckBox::indicator:checked {
+                background-color: #A6E3A1;
+            }
+        """,
+        
+        "card_front": """
+            QFrame {
+                background-color: #FDE4E0;
+                border-radius: 20px;
+                padding: 30px;
+            }
+        """,
+        
+        "card_back": """
+            QFrame { 
+                background-color: #FDE4E0;
+                border-radius: 20px;
+                padding: 30px;
+            }
+        """,
+        
+        "card_text": """
+            QLabel {
+                color: black;
+                font-size: 24px;
+                background-color: transparent;
+            }
+        """,
+
+        "hint_button": """
+            QPushButton {
+                background-color: #C3DCF4;
+                color: black;
+                border-radius: 8px;
+                padding: 8px 16px;
+                font-size: 14px;
+                font-weight: 700;
+                min-height: 40px;
+                min-width: 120px;
+            }
+            QPushButton:hover {
+                background-color: #9CC5EC;
+            }
+            QPushButton:pressed {
+                background-color: #76AFE5;
+            }
+        """,
+        "hint_text": """
+            QLabel {
+                color: black;
+                font-size: 30px;
+                font-weight: 700;
+                border-radius: 12px;
+                padding: 12px 20px;
+                min-height: 20px;
+                min-width: 100px;
+                margin: 5px;
+                background-color: #F8CF8D;
+            }
         """
     }   
-
-
+              
 def get_multiple_choice_styles():
     return {
         "header_frame": """
