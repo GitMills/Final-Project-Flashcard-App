@@ -1,5 +1,5 @@
 # FINAL PROJECT FLASHCARD APP / ui / visual / styles / animations.py
-
+from PyQt6.QtWidgets import QWidget, QVBoxLayout, QGraphicsOpacityEffect
 from PyQt6.QtCore import QPropertyAnimation, QEasingCurve, QObject
 
 class SidebarAnimations:
@@ -63,3 +63,59 @@ class FadeAnimation(QObject): #jose
         if on_finished:
             self.animation.finished.connect(on_finished)
         self.animation.start()
+        
+class FadeWidget(QWidget):
+    def __init__(self, widget, parent_window):
+        super().__init__()
+        self.widget = widget
+        self.parent_window = parent_window
+
+        # Layout setup
+        layout = QVBoxLayout()
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.addWidget(widget)
+        self.setLayout(layout)
+
+        # Opacity effect
+        self.effect = QGraphicsOpacityEffect()
+        self.widget.setGraphicsEffect(self.effect)
+        self.anim = None
+
+    def fade_in(self):
+        self.anim = QPropertyAnimation(self.effect, b"opacity")
+        self.anim.setDuration(600)
+        self.anim.setStartValue(0.0)
+        self.anim.setEndValue(1.0)
+        self.anim.setEasingCurve(QEasingCurve.Type.InOutQuad)
+        self.anim.start()
+
+    def fade_out(self, next_widget=None, on_finish=None):
+        """
+        Fade out this widget.
+        :param next_widget: FadeWidget to fade in next (optional)
+        :param on_finish: callback to run after fade completes (optional)
+        """
+        self.anim = QPropertyAnimation(self.effect, b"opacity")
+        self.anim.setDuration(600)
+        self.anim.setStartValue(1.0)
+        self.anim.setEndValue(0.0)
+        self.anim.setEasingCurve(QEasingCurve.Type.InOutQuad)
+        self.anim.finished.connect(lambda: self.switch_page(next_widget, on_finish))
+        self.anim.start()
+
+    def switch_page(self, next_widget=None, on_finish=None):
+        """Safely handle switching or running callback after fade."""
+        if next_widget is not None:
+            try:
+                next_widget.fade_in()
+                if hasattr(self.parent_window, "stacked"):
+                    self.parent_window.stacked.setCurrentWidget(next_widget)
+            except Exception:
+                pass
+
+        if callable(on_finish):
+            try:
+                on_finish()
+            except Exception:
+                pass
+            
