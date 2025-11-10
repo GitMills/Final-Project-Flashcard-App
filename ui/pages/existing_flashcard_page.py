@@ -93,10 +93,10 @@ class ExistingFlashcard(QWidget):
 
         # Topic list with icon images
         self.topics = [
-            {"name": "English", "color": "#B3D9FF", "icon": get_asset_path("BookIcon.png")},
-            {"name": "Math", "color": "#B9FBC0", "icon": get_asset_path("MathIcon.png")},
-            {"name": "Science", "color": "#FFE6A7", "icon": get_asset_path("ScienceIcon.png")},
-            {"name": "History", "color": "#FFB3B3", "icon": get_asset_path("HistoryIcon.png")},
+            {"name": " English", "color": "#B3D9FF", "icon": get_asset_path("BookIcon.png")},
+            {"name": " Math", "color": "#B9FBC0", "icon": get_asset_path("MathIcon.png")},
+            {"name": " Science", "color": "#FFE6A7", "icon": get_asset_path("ScienceIcon.png")},
+            {"name": " History", "color": "#FFB3B3", "icon": get_asset_path("HistoryIcon.png")},
         ]
 
         # Flashcard question/answer sets
