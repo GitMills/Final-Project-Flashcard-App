@@ -5,9 +5,12 @@ from PyQt6.QtWidgets import (
     QProgressBar, QFrame, QMessageBox
 )
 from PyQt6.QtCore import Qt
-from PyQt6.QtGui import QFont
+from PyQt6 import QtCore
+from PyQt6.QtGui import QFont, QIcon, QPixmap
 from random import shuffle
+
 from ui.visual.styles.styles import get_existing_flashcard_styles
+from utils.path_helper import get_asset_path
 
 
 class FlashcardWidget(QFrame):
@@ -88,12 +91,12 @@ class ExistingFlashcard(QWidget):
         self.scroll_layout.setSpacing(20)
         self.scroll_area.setWidget(self.scroll_widget)
 
-        # Topic list
+        # Topic list with icon images
         self.topics = [
-            {"name": "English", "color": "#B3D9FF", "icon": "📘"},
-            {"name": "Math", "color": "#B9FBC0", "icon": "🧮"},
-            {"name": "Science", "color": "#FFE6A7", "icon": "🔬"},
-            {"name": "History", "color": "#FFB3B3", "icon": "🌎"},
+            {"name": "English", "color": "#B3D9FF", "icon": get_asset_path("BookIcon.png")},
+            {"name": "Math", "color": "#B9FBC0", "icon": get_asset_path("MathIcon.png")},
+            {"name": "Science", "color": "#FFE6A7", "icon": get_asset_path("ScienceIcon.png")},
+            {"name": "History", "color": "#FFB3B3", "icon": get_asset_path("HistoryIcon.png")},
         ]
 
         # Flashcard question/answer sets
@@ -146,14 +149,16 @@ class ExistingFlashcard(QWidget):
                         sub_widget = sub_item.widget()
                         sub_widget.setParent(None)
                         sub_widget.deleteLater()
-                # Remove the layout itself
                 sub_layout.setParent(None)
 
     def show_topics(self):
         self.clear_scroll_layout()
 
         for topic in self.topics:
-            btn = QPushButton(f"{topic['icon']}   {topic['name']}")
+            btn = QPushButton(topic["name"])
+            btn.setIcon(QIcon(QPixmap(topic["icon"])))
+            btn.setIconSize(QtCore.QSize(60, 60))
+
             if self.main_window:
                 screen = self.main_window.screen()
                 screen_size = screen.availableGeometry()
