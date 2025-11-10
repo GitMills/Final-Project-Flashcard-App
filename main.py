@@ -18,29 +18,38 @@ os.environ["QT_AUTO_SCREEN_SCALE_FACTOR"] = "1"
 os.environ["QT_SCALE_FACTOR"] = "1"
 
 from ui.pages.bootup_page import BootupPage
+from ui.pages.welcome_page import WelcomePage
 from ui.main_window import MainWindow
 from utils.path_helper import get_asset_path
 
 def main():
     app = QApplication(sys.argv)
-    
-    # Set app icon using path helper
     app.setWindowIcon(QIcon(get_asset_path("AppIcon.png")))
 
-    # Create and show main window
-    window = MainWindow()
-    # Changed from showMaximized() to show() to let layout determine size
-    window.showMaximized()
-    
+    # Create main window but don’t show yet
+    main_window = MainWindow()
+
+    # Create welcome page (it will show main window later)
+    class AppController:
+        def __init__(self):
+            self.main_window = main_window
+            
+        def show_main_window(self):
+            self.welcome_page.close()
+            self.main_window.showMaximized()
+
+    controller = AppController()
+    controller.welcome_page = WelcomePage(app=controller)
+
+    # Bootup page → Welcome page
     def on_bootup_finished():
         bootup_page.close()
-        window.showMaximized()
+        controller.welcome_page.showMaximized()
 
-    # Create bootup page and pass callback
+    # Bootup
     bootup_page = BootupPage(on_finish_callback=on_bootup_finished)
     bootup_page.show()
-    
-    # Run application
+
     sys.exit(app.exec())
 
 if __name__ == "__main__":
