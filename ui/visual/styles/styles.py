@@ -1519,34 +1519,9 @@ def get_pomodoro_styles():
         "spin_box": """
             QSpinBox {
                 background-color: white;
-                border-radius: 8px;
-                padding: 8px;
-                font-size: 12px;
-                color: #2C3E50;
-                font-weight: bold;
-                min-width: 12px;
+                color:black;
             }
-            QSpinBox:focus {
-                background-color: #FFF8E1;
-            }
-            QSpinBox::up-button {
-                background-color: #C5DBF2;
-                border-radius: 3px;
-                width: 15px;
-            }
-            QSpinBox::down-button {
-                background-color: #C5DBF2;
-                border-radius: 3px;
-                width: 15px;
-            }
-            QSpinBox::up-arrow {
-                content: "▲";
-                color: black;          
-            }
-            QSpinBox::down-arrow {
-                 content: "▼";
-                 color: black;
-            }
+
         """,
         
         "settings_info": """

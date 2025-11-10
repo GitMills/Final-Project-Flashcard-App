@@ -120,22 +120,16 @@ class SettingsPage(QWidget):
                 # Check what's actually in the assets directory
                 assets_dir = os.path.dirname(music_path)
                 if os.path.exists(assets_dir):
-                    print(f"Files in assets directory: {os.listdir(assets_dir)}")
                 else:
-                    print("Assets directory doesn't exist!")
                 self.music_player = None
                 
         except ImportError as e:
-            print(f"Error importing path helper: {e}")
             self.music_player = None
         except Exception as e:
-            print(f"Unexpected error in setup_music: {e}")
             self.music_player = None
 
     def handle_music_error(self, error):
-        print(f"Music player error: {error}")
         if hasattr(self, 'music_player') and self.music_player:
-            print(f"Error string: {self.music_player.errorString()}")
 
     # Change volume when slider moves
     def change_volume(self, value):
@@ -153,12 +147,9 @@ class SettingsPage(QWidget):
                 # Set volume first, then play
                 self.music_output.setVolume(self.volume_slider.value() / 100.0)
                 self.music_player.play()
-                print("Music started playing")
             else:
                 self.music_player.stop()
-                print("Music stopped")
         else:
-            print("No music player available")
 
     def choose_color(self):
         color = QColorDialog.getColor()
