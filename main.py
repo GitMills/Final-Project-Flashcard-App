@@ -17,6 +17,7 @@ os.environ["QT_ENABLE_HIGHDPI_SCALING"] = "1"
 os.environ["QT_AUTO_SCREEN_SCALE_FACTOR"] = "1"
 os.environ["QT_SCALE_FACTOR"] = "1"
 
+from ui.pages.bootup_page import BootupPage
 from ui.main_window import MainWindow
 from utils.path_helper import get_asset_path
 
@@ -30,6 +31,14 @@ def main():
     window = MainWindow()
     # Changed from showMaximized() to show() to let layout determine size
     window.showMaximized()
+    
+    def on_bootup_finished():
+        bootup_page.close()
+        window.showMaximized()
+
+    # Create bootup page and pass callback
+    bootup_page = BootupPage(on_finish_callback=on_bootup_finished)
+    bootup_page.show()
     
     # Run application
     sys.exit(app.exec())
