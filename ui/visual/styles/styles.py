@@ -1,5 +1,21 @@
 # FINAL PROJECT FLASHCARD APP / ui / visual / styles / styles.py
+from PyQt6.QtGui import QFont
 
+FONT_LARGE_BOLD = QFont("Poppins", 24, QFont.Weight.Bold) #jose
+
+#stylesheet for loading bar, jose
+progress_bar_styles = """
+QProgressBar {
+    border: 2px solid #E2E8F0;
+    border-radius: 10px;
+    background-color: #F7FAFC;
+    height: 14px;
+}
+QProgressBar::chunk {
+    background-color: #434190;
+    border-radius: 10px;
+}
+"""
 
 def get_sidebar_styles():
     return {

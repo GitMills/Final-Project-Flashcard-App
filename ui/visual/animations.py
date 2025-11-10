@@ -1,6 +1,6 @@
 # FINAL PROJECT FLASHCARD APP / ui / visual / styles / animations.py
 
-from PyQt6.QtCore import QPropertyAnimation, QEasingCurve
+from PyQt6.QtCore import QPropertyAnimation, QEasingCurve, QObject
 
 class SidebarAnimations:
     def __init__(self, sidebar_widget):
@@ -40,3 +40,26 @@ class SidebarAnimations:
     def get_animation_state(self):
         # Check if any animation is runnig
         return self.width_animation.state() == QPropertyAnimation.State.Running
+    
+class FadeAnimation(QObject): #jose
+    """Reusable fade in/out animation for any QWidget."""
+    def __init__(self, widget, duration=600):
+        super().__init__()
+        self.widget = widget
+        self.animation = QPropertyAnimation(widget, b"windowOpacity")
+        self.animation.setDuration(duration)
+        self.animation.setEasingCurve(QEasingCurve.Type.InOutQuad)
+
+    def fade_in(self):
+        self.widget.setWindowOpacity(0)
+        self.widget.show()
+        self.animation.setStartValue(0)
+        self.animation.setEndValue(1)
+        self.animation.start()
+
+    def fade_out(self, on_finished=None):
+        self.animation.setStartValue(1)
+        self.animation.setEndValue(0)
+        if on_finished:
+            self.animation.finished.connect(on_finished)
+        self.animation.start()
