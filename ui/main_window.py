@@ -8,6 +8,7 @@ from PyQt6.QtWidgets import (
 from PyQt6.QtCore import QTimer
 
 # Import our page classes
+from ui.pages.bootup_page import BootupPage
 from ui.pages.home_page import HomePage
 from ui.pages.profile_page import ProfilePage
 from ui.pages.settings_page import SettingsPage
@@ -151,6 +152,10 @@ class MainWindow(QWidget):
         self.sidebar.setLayout(sidebar_layout)
     
     def create_pages(self):
+         # Bootup first, jose
+        self.bootup_page = BootupPage(on_finish_callback=self.show_home_after_bootup)
+        self.pages_stack.addWidget(self.bootup_page)  # index 0
+        
         # Create instances of our separate page classes and pass main window reference
         self.home_page = HomePage(self)  # Pass self (MainWindow) as reference
         self.profile_page = ProfilePage()
@@ -162,17 +167,22 @@ class MainWindow(QWidget):
         self.flashcard_study_page = FlashcardStudyPage(self, None)
         self.multiple_choice_study_page = MultipleChoiceStudy(self, None) 
 
+    
+        self.pages_stack.addWidget(self.home_page)         # index 1
+        self.pages_stack.addWidget(self.profile_page)      # index 2
+        self.pages_stack.addWidget(self.settings_page)     # index 3
+        self.pages_stack.addWidget(self.all_cards_page)    # index 4
+        self.pages_stack.addWidget(self.help_page)          # index 5
+        self.pages_stack.addWidget(self.create_flashcard_page) # index 6
+        self.pages_stack.addWidget(self.existing_flashcard_page) # index 7
+        self.pages_stack.addWidget(self.flashcard_study_page) # index 8
+        self.pages_stack.addWidget(self.multiple_choice_study_page) # index 9
 
-        self.pages_stack.addWidget(self.home_page)         # index 0
-        self.pages_stack.addWidget(self.profile_page)      # index 1
-        self.pages_stack.addWidget(self.settings_page)     # index 2
-        self.pages_stack.addWidget(self.all_cards_page)    # index 3
-        self.pages_stack.addWidget(self.help_page)          # index 4
-        self.pages_stack.addWidget(self.create_flashcard_page) # index 5
-        self.pages_stack.addWidget(self.existing_flashcard_page) # index 6
-        self.pages_stack.addWidget(self.flashcard_study_page) # index 7
-        self.pages_stack.addWidget(self.multiple_choice_study_page) # index 8
+        self.pages_stack.setCurrentIndex(0) #jose
 
+    def show_home_after_bootup(self): #jose
+        """Called when BootupPage finishes fading out."""
+        self.pages_stack.setCurrentIndex(1)  # HomePage index
 
     def setup_animation(self):
         # Initialize animations
