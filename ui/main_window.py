@@ -245,11 +245,10 @@ class MainWindow(QWidget):
         self.pages_stack.addWidget(self.settings_page)     # index 2
         self.pages_stack.addWidget(self.all_cards_page)    # index 3
         self.pages_stack.addWidget(self.help_page)          # index 4
-        self.pages_stack.addWidget(self.accounts_page) #BAGONG ADD (LOGIN) index 5
-        self.pages_stack.addWidget(self.create_flashcard_page) # index 6
-        self.pages_stack.addWidget(self.existing_flashcard_page) # index 7
-        self.pages_stack.addWidget(self.flashcard_study_page) # index 8
-        self.pages_stack.addWidget(self.multiple_choice_study_page) # index 9
+        self.pages_stack.addWidget(self.create_flashcard_page) # index 5
+        self.pages_stack.addWidget(self.existing_flashcard_page) # index 6
+        self.pages_stack.addWidget(self.flashcard_study_page) # index 7
+        self.pages_stack.addWidget(self.multiple_choice_study_page) # index 8
         
         self.setup_shortcut_flashcard()
        
