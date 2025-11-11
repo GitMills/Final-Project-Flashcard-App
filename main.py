@@ -5,6 +5,8 @@ import os
 from PyQt6.QtWidgets import QApplication, QStackedWidget
 from PyQt6.QtGui import QIcon
 from PyQt6.QtCore import Qt 
+from PyQt6.QtGui import QKeySequence, QShortcut
+from PyQt6.QtCore import Qt
 
 # Enable high DPI scaling with proper fallbacks
 if hasattr(Qt, 'HighDpiScaleFactorRoundingPolicy'):
@@ -40,6 +42,7 @@ class AppStack(QStackedWidget):
         
         #start with welcome page for this stacked widget (bootup is independent)
         self.setCurrentWidget(self.welcome_page)
+        self.setup_shortcuts_general()
         
     def show_main_window(self):
         """Switch from welcome page to the main window page"""
@@ -52,15 +55,19 @@ class AppStack(QStackedWidget):
         self.main_window.show_page(0)
         
         self.main_window.show_page(0)
-         
+        self.setup_shortcuts_general()
+
+    def setup_shortcuts_general(self):
+        # Quit app----------------------------------------------------->
+        self.shortcut_quit = QShortcut(QKeySequence("Ctrl+Q"), self)
+        self.shortcut_quit.setContext(Qt.ShortcutContext.ApplicationShortcut)
+        self.shortcut_quit.activated.connect(self.close)
+
+
 #bootup page setup   
 def main():
     app = QApplication(sys.argv)
     app.setWindowIcon(QIcon(get_asset_path("AppIcon.png")))
-    
-    # Apply global scrollbar styles (Facebook-style)
-    from ui.visual.styles.styles import get_global_scrollbar_styles
-    app.setStyleSheet(get_global_scrollbar_styles())
     
     stacked_app = AppStack()
     
@@ -72,6 +79,6 @@ def main():
     bootup_page.show()
     
     sys.exit(app.exec())
-        
+    
 if __name__ == "__main__":
     main()

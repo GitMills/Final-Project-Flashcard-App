@@ -236,6 +236,48 @@ class MainWindow(QWidget):
         self.pages_stack.addWidget(self.existing_flashcard_page) # index 6
         self.pages_stack.addWidget(self.flashcard_study_page) # index 7
         self.pages_stack.addWidget(self.multiple_choice_study_page) # index 8
+        self.setup_shortcut_flashcard()
+        
+    def setup_shortcut_flashcard(self):
+            self.shortcut_quit = QShortcut(QKeySequence("Ctrl+Q"), self)
+            self.shortcut_quit.setContext(Qt.ShortcutContext.ApplicationShortcut)
+            self.shortcut_quit.activated.connect(self.close)
+
+            # Flip card (if current page is study page) — use "Space" string for clarity
+            self.shortcut_flip = QShortcut(QKeySequence("Space"), self)
+            self.shortcut_flip.setContext(Qt.ShortcutContext.ApplicationShortcut)
+            self.shortcut_flip.activated.connect(self.flip_current_card)
+
+            # Next page (Ctrl+Tab) — sometimes intercepted by widgets, keep as ApplicationShortcut
+            self.shortcut_next = QShortcut(QKeySequence("Ctrl+Tab"), self)
+            self.shortcut_next.setContext(Qt.ShortcutContext.ApplicationShortcut)
+            self.shortcut_next.activated.connect(self.next_page)
+                
+            # Navigate to Home
+            self.shortcut_home = QShortcut(QKeySequence("Ctrl+H"), self)
+            self.shortcut_home.setContext(Qt.ShortcutContext.ApplicationShortcut)
+            self.shortcut_home.activated.connect(lambda: self.show_page(0))
+
+            # Navigate to Profile
+            self.shortcut_profile = QShortcut(QKeySequence("Ctrl+P"), self)
+            self.shortcut_profile.setContext(Qt.ShortcutContext.ApplicationShortcut)
+            self.shortcut_profile.activated.connect(lambda: self.show_page(1))
+
+            # Navigate to Settings
+            self.shortcut_settings = QShortcut(QKeySequence("Ctrl+S"), self)
+            self.shortcut_settings.setContext(Qt.ShortcutContext.ApplicationShortcut)
+            self.shortcut_settings.activated.connect(lambda: self.show_page(2))
+
+            # Navigate to Help
+            self.shortcut_help = QShortcut(QKeySequence("F1"), self)
+            self.shortcut_help.setContext(Qt.ShortcutContext.ApplicationShortcut)
+            self.shortcut_help.activated.connect(lambda: self.show_page(4))
+
+            # Open Create Flashcard page
+            self.shortcut_create_flash = QShortcut(QKeySequence("Ctrl+N"), self)
+            self.shortcut_create_flash.setContext(Qt.ShortcutContext.ApplicationShortcut)
+            self.shortcut_create_flash.activated.connect(lambda: self.show_page(5))
+
 
     def setup_animation(self):
         # Initialize animations
