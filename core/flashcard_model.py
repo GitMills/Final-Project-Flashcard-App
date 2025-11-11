@@ -8,6 +8,7 @@ from typing import List
 class Flashcard:
     question: str
     answer: str
+    custom_hint: str = None
 
 @dataclass  
 class FlashcardSet:

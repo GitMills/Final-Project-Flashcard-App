@@ -58,6 +58,10 @@ def main():
     app = QApplication(sys.argv)
     app.setWindowIcon(QIcon(get_asset_path("AppIcon.png")))
     
+    # Apply global scrollbar styles (Facebook-style)
+    from ui.visual.styles.styles import get_global_scrollbar_styles
+    app.setStyleSheet(get_global_scrollbar_styles())
+    
     stacked_app = AppStack()
     
     def on_bootup_complete():

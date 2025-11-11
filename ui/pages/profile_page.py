@@ -47,4 +47,3 @@ class ProfilePage(QWidget):
         name = self.name_input.text()
         email = self.email_input.text()
         age = self.age_spinbox.value()
-        print(f"Saving: {name}, {email}, {age}")

@@ -1,238 +1,327 @@
 # FINAL PROJECT FLASHCARD APP / ui / pages / flashcard_study_multiple_choice_page.py
 
-from PyQt6.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QLabel, 
-                            QPushButton, QMessageBox, QFrame, QButtonGroup,
-                            QRadioButton, QGridLayout)
-from PyQt6.QtCore import Qt, QTimer
-import random
+from PyQt6.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QLabel, QPushButton, 
+                            QFrame, QRadioButton, QButtonGroup)
+from PyQt6.QtCore import Qt
 from ui.visual.styles.styles import get_multiple_choice_styles
+import random
 
 class MultipleChoiceStudy(QWidget):
-    def __init__(self, main_window, flashcard_set=None):
+    def __init__(self, main_window, flashcard_set):
         super().__init__()
         self.main_window = main_window
-        self.flashcard_set = flashcard_set
-        self.correct_answers = 0
-        self.total_questions = 0
+        self.flashcard_set = flashcard_set or {'set_name': 'No Set', 'cards': []}
+        self.current_card_index = 0
+        self.correct_count = 0
+        self.wrong_count = 0
         self.styles = get_multiple_choice_styles()
+        
+        # Card deck system to prevent infinite loops
+        self.card_deck = []
+        self.mastered_cards = []
+        self.total_cards = 0
+        
         self.setup_ui()
     
+    def keyPressEvent(self, event):
+        """Override to prevent space bar from triggering buttons"""
+        from PyQt6.QtCore import Qt
+        if event.key() == Qt.Key.Key_Space:
+            # Ignore space bar to prevent accidental navigation
+            event.ignore()
+        else:
+            super().keyPressEvent(event)
+        
+    def update_flashcard_set(self, flashcard_set):
+        """Update the flashcard set and reset the study session"""
+        self.flashcard_set = flashcard_set
+        self.current_card_index = 0
+        self.correct_count = 0
+        self.wrong_count = 0
+        
+        # Initialize card deck system
+        if self.flashcard_set and self.flashcard_set.get('cards'):
+            import copy
+            self.card_deck = copy.deepcopy(self.flashcard_set['cards'])
+            self.mastered_cards = []
+            self.total_cards = len(self.card_deck)
+            self.last_answer_correct = False
+            random.shuffle(self.card_deck)
+            
+            # Force uncheck all radio buttons before loading
+            if hasattr(self, 'option_buttons'):
+                for btn in self.option_buttons:
+                    btn.setAutoExclusive(False)
+                    btn.setChecked(False)
+                for btn in self.option_buttons:
+                    btn.setAutoExclusive(True)
+            
+            self.load_question()
+        
     def setup_ui(self):
         layout = QVBoxLayout()
-        layout.setSpacing(10)
-        layout.setContentsMargins(15, 15, 15, 15)
+        layout.setSpacing(20)
+        layout.setContentsMargins(40, 30, 40, 30)
+        self.setLayout(layout)
         
-        # Header frame - KEEP YOUR STYLES
-        header_frame = QFrame()
-        header_frame.setStyleSheet(self.styles["header_frame"])
-        header_layout = QHBoxLayout(header_frame)
+        # Header
+        header_layout = QHBoxLayout()
         
-        if self.flashcard_set:
-            set_name_text = f"MC: {self.flashcard_set['set_name']}"
-        else:
-            set_name_text = "Multiple Choice"
-        
-        self.set_name_label = QLabel(set_name_text)
-        self.set_name_label.setStyleSheet(self.styles["set_name_label"])
-        header_layout.addWidget(self.set_name_label)
-        
-        self.stats_label = QLabel("0/0 | Remaining: 0/0")
-        self.stats_label.setStyleSheet(self.styles["stats_label"])
-        header_layout.addWidget(self.stats_label)
+        # Back button
+        back_btn = QPushButton("← Back")
+        back_btn.setStyleSheet(self.styles["back_button"])
+        back_btn.clicked.connect(lambda: self.main_window.show_page(3))
+        back_btn.setFocusPolicy(Qt.FocusPolicy.NoFocus)  # Prevent space bar activation
+        header_layout.addWidget(back_btn)
         
         header_layout.addStretch()
         
-        back_btn = QPushButton("← Back")
-        back_btn.setStyleSheet(self.styles["back_button"])
-        back_btn.clicked.connect(self.go_back)
-        back_btn.setMinimumSize(80, 30)
-        header_layout.addWidget(back_btn)
+        # Set name
+        self.set_name_label = QLabel("Multiple Choice")
+        self.set_name_label.setStyleSheet(self.styles["set_name_label"])
+        header_layout.addWidget(self.set_name_label)
         
-        layout.addWidget(header_frame)
+        header_layout.addStretch()
         
-        # Question frame - KEEP YOUR STYLES
-        question_frame = QFrame()
-        question_frame.setStyleSheet(self.styles["question_frame"])
-        question_frame.setMinimumHeight(60)
-        question_frame.setMaximumHeight(150)
+        # Stats
+        self.stats_label = QLabel("Question 1 of 1")
+        self.stats_label.setStyleSheet(self.styles["stats_label"])
+        header_layout.addWidget(self.stats_label)
         
-        question_layout = QVBoxLayout(question_frame)
+        layout.addLayout(header_layout)
         
-        if self.flashcard_set:
-            initial_question_text = "Click Next Question to start"
-        else:
-            initial_question_text = "Please select a flashcard set first"
-            
-        self.question_label = QLabel(initial_question_text)
-        self.question_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        # Question frame
+        self.question_frame = QFrame()
+        self.question_frame.setStyleSheet(self.styles["question_frame"])
+        question_layout = QVBoxLayout(self.question_frame)
+        
+        self.question_label = QLabel("Question will appear here")
+        self.question_label.setStyleSheet(self.styles["question_label"])
         self.question_label.setWordWrap(True)
-        self.question_label.setStyleSheet(self.styles["question_label"])  # YOUR STYLE
+        self.question_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         question_layout.addWidget(self.question_label)
         
-        layout.addWidget(question_frame)
+        layout.addWidget(self.question_frame)
         
-        # Options - KEEP YOUR STYLES
-        self.options_layout = QGridLayout()
-        self.options_layout.setSpacing(8)
-        
-        self.button_group = QButtonGroup()
-        self.button_group.setExclusive(True)
-        
+        # Options
+        self.options_layout = QVBoxLayout()
+        self.options_layout.setSpacing(10)
+        self.button_group = QButtonGroup(self)
+        self.button_group.setExclusive(False)  # Allow unchecking all
         self.option_buttons = []
+        
         for i in range(4):
-            option_btn = QRadioButton()
-            option_btn.setMinimumHeight(45)
-            option_btn.setVisible(False)
-            option_btn.setStyleSheet(self.styles["option_button"])  # YOUR STYLE
-            self.button_group.addButton(option_btn, i)
-            self.option_buttons.append(option_btn)
-            
-            row = i // 2
-            col = i % 2
-            self.options_layout.addWidget(option_btn, row, col)
+            option = QRadioButton(f"Option {i+1}")
+            option.setStyleSheet(self.styles["option_button"])
+            option.setAutoExclusive(False)  # Allow manual unchecking
+            option.setChecked(False)  # Ensure not checked by default
+            self.button_group.addButton(option, i)
+            self.option_buttons.append(option)
+            # Auto-check when option is clicked
+            option.clicked.connect(self.on_option_clicked)
+            # Disable space bar activation
+            option.setFocusPolicy(Qt.FocusPolicy.NoFocus)
+            self.options_layout.addWidget(option)
         
-        options_container = QWidget()
-        options_container_layout = QVBoxLayout(options_container)
-        options_container_layout.addStretch()
-        options_container_layout.addLayout(self.options_layout)
-        options_container_layout.addStretch()
+        layout.addLayout(self.options_layout)
         
-        layout.addWidget(options_container)
-        
-        # Result label - KEEP YOUR STYLES
-        self.result_label = QLabel()
+        # Result label
+        self.result_label = QLabel("")
+        self.result_label.setStyleSheet(self.styles["result_label"])
         self.result_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.result_label.setMinimumHeight(25)
-        self.result_label.setStyleSheet(self.styles["result_label"])  # YOUR STYLE
+        self.result_label.hide()
         layout.addWidget(self.result_label)
         
-        # Next button - KEEP YOUR STYLES
+        # Next button (initially hidden since we auto-check)
+        button_layout = QHBoxLayout()
+        button_layout.addStretch()
+        
         self.next_btn = QPushButton("Next Question")
-        self.next_btn.setStyleSheet(self.styles["next_button"])  # YOUR STYLE
-        self.next_btn.clicked.connect(self.show_next_question)
-        self.next_btn.setMinimumHeight(35)
-        self.next_btn.setMaximumWidth(200)
-            
-        if not self.flashcard_set:
-            self.next_btn.setEnabled(False)
+        self.next_btn.setStyleSheet(self.styles["next_button"])
+        self.next_btn.clicked.connect(self.next_question)
+        self.next_btn.setFocusPolicy(Qt.FocusPolicy.NoFocus)  # Prevent space bar activation
+        self.next_btn.hide()  # Hidden until answer is checked
+        button_layout.addWidget(self.next_btn)
         
-        button_container = QHBoxLayout()
-        button_container.addStretch()
-        button_container.addWidget(self.next_btn)
-        button_container.addStretch()
-        layout.addLayout(button_container)
+        button_layout.addStretch()
+        layout.addLayout(button_layout)
         
-        self.setLayout(layout)
-        self.button_group.buttonClicked.connect(self.on_option_selected)
+        layout.addStretch()
 
-    # ALL YOUR EXISTING METHODS BELOW - NO CHANGES TO FUNCTIONALITY
-    def update_flashcard_set(self, flashcard_set):
-        self.flashcard_set = flashcard_set
-        self.correct_answers = 0
-        self.total_questions = 0
         
-        self.remaining_cards = self.flashcard_set['cards'].copy()
-        self.mastered_cards = []
-        self.attempted_cards = {}
-        
-        self.set_name_label.setText(f"MC: {self.flashcard_set['set_name']}")
-        remaining_count = len(self.remaining_cards)
-        total_cards = len(self.flashcard_set['cards'])
-        self.stats_label.setText(f"0/{total_cards} | Rem: {remaining_count}/{total_cards}")
-        self.next_btn.setEnabled(True)
-        
-        self.show_next_question()
-
-    def show_next_question(self):
-        if not self.remaining_cards:
-            self.show_completion_message()
+    def load_question(self):
+        """Load current question with multiple choice options using card deck system"""
+        # Check if deck is empty
+        if not self.card_deck:
+            self.show_completion()
             return
         
-        self.result_label.clear()
-        self.next_btn.hide()
-        self.button_group.setExclusive(False)
-        for button in self.option_buttons:
-            button.setChecked(False)
-            button.setEnabled(True)
-            button.setVisible(True)
-        self.button_group.setExclusive(True)
+        # Get current card from deck
+        current_card = self.card_deck[0]
+        self.question_label.setText(current_card['question'])
         
-        self.current_card = random.choice(self.remaining_cards)
-        correct_answer = self.current_card['answer']
+        # Reset mistake tracker for THIS NEW appearance
+        self.had_mistake_this_appearance = False
         
-        options = [correct_answer]
-        all_other_cards = [card for card in self.flashcard_set['cards'] if card['answer'] != correct_answer]
-        wrong_answers = random.sample([card['answer'] for card in all_other_cards], min(3, len(all_other_cards)))
+        # Update stats - show progress through total cards
+        remaining = len(self.card_deck)
+        mastered = len(self.mastered_cards)
+        self.stats_label.setText(f"Remaining: {remaining} | Mastered: {mastered}/{self.total_cards}")
+        self.set_name_label.setText(self.flashcard_set.get('set_name', 'Multiple Choice'))
         
-        while len(wrong_answers) < 3:
-            wrong_answers.append("Not enough options")
+        # Generate options
+        correct_answer = current_card['answer']
         
-        options.extend(wrong_answers)
-        random.shuffle(options)
+        # Get all available cards for wrong options (from both deck and mastered)
+        all_available_cards = self.card_deck + self.mastered_cards
+        other_answers = [card['answer'] for card in all_available_cards if card['answer'] != correct_answer]
         
-        self.correct_answer_index = options.index(correct_answer)
-        self.question_label.setText(f"{self.current_card['question']}")
-        
-        for i, option in enumerate(options):
-            self.option_buttons[i].setText(option)
-            self.option_buttons[i].setVisible(True)
-
-    def on_option_selected(self, button):
-        if not self.flashcard_set:
-            return
+        # Check if we have enough unique answers
+        if len(other_answers) < 3:
+            # Not enough options - show error and complete
+            self.question_label.setText("⚠️ Not enough unique answers to generate options!")
+            self.result_label.setText("Please add more cards with different answers.")
+            self.result_label.setStyleSheet(self.styles["result_label"] + "background-color: #F9E2AF;")
+            self.result_label.show()
             
-        selected_index = self.button_group.id(button)
-        current_question = self.current_card['question']
-        is_first_attempt = current_question not in self.attempted_cards
-        
-        if selected_index == self.correct_answer_index:
-            if is_first_attempt:
-                self.remaining_cards.remove(self.current_card)
-                self.mastered_cards.append(self.current_card)
-                self.attempted_cards[current_question] = 'mastered'
-                self.correct_answers += 1
-                self.result_label.setText("Correct! First try - this question is mastered!")
-            else:
-                self.result_label.setText("Correct! But since you got it wrong before, it will appear again.")
-            
+            # Hide options and change button
             for btn in self.option_buttons:
-                btn.setEnabled(False)
-            self.next_btn.show()
+                btn.hide()
+            self.next_btn.setText("Back to Sets")
+            self.next_btn.clicked.disconnect()
+            self.next_btn.clicked.connect(lambda: self.main_window.show_page(3))
+            return
         
+        # Shuffle and select wrong options
+        random.shuffle(other_answers)
+        wrong_options = other_answers[:3]
+        
+        # Combine and shuffle all options
+        all_options = [correct_answer] + wrong_options
+        random.shuffle(all_options)
+        
+        # Store correct answer
+        self.correct_answer = correct_answer
+        
+        # Update buttons
+        for i, option_text in enumerate(all_options):
+            self.option_buttons[i].setText(option_text)
+            self.option_buttons[i].setEnabled(True)
+            self.option_buttons[i].setChecked(False)
+            self.option_buttons[i].show()
+        
+        self.result_label.hide()
+        self.next_btn.hide()  # Hide until answer is selected
+        
+    def on_option_clicked(self):
+        """Handle option click - uncheck others and check answer"""
+        clicked_button = self.sender()
+        
+        # Uncheck all other buttons
+        for btn in self.option_buttons:
+            if btn != clicked_button:
+                btn.setChecked(False)
+        
+        # Ensure clicked button is checked
+        clicked_button.setChecked(True)
+        
+        # Check the answer
+        self.check_answer()
+    
+    def check_answer(self):
+        """Check if selected answer is correct - tracks mistakes per appearance"""
+        selected_button = self.button_group.checkedButton()
+        if not selected_button:
+            return
+            
+        selected_answer = selected_button.text()
+        
+        if selected_answer == self.correct_answer:
+            # Correct answer!
+            if hasattr(self, 'had_mistake_this_appearance') and self.had_mistake_this_appearance:
+                # Had mistakes on this appearance - card will appear again
+                self.result_label.setText("✓ Correct! But you made mistakes, so it will appear again.")
+                self.result_label.setStyleSheet(self.styles["result_label"] + "background-color: #F9E2AF;")
+            else:
+                # First try correct - card is mastered!
+                self.result_label.setText("✓ Correct! First try - this question is mastered!")
+                self.result_label.setStyleSheet(self.styles["result_label"] + "background-color: #A6E3A1;")
+            self.correct_count += 1
         else:
-            self.attempted_cards[current_question] = 'failed'
-            button.setEnabled(False)
-            self.result_label.setText("Wrong! This question will appear again until you master it.")
+            # Wrong answer - mark that we had a mistake
+            self.had_mistake_this_appearance = True
+            self.result_label.setText(f"✗ Wrong! Try another answer.")
+            self.result_label.setStyleSheet(self.styles["result_label"] + "background-color: #F38BA8;")
+            self.wrong_count += 1
+            
+            # Re-enable options so they can try again on SAME question
+            for btn in self.option_buttons:
+                btn.setEnabled(True)
+                btn.setChecked(False)
+            
+            self.result_label.show()
+            return  # Don't change to Next button - let them try again
         
-        remaining_count = len(self.remaining_cards)
-        total_cards = len(self.flashcard_set['cards'])
-        self.stats_label.setText(f"{self.correct_answers}/{total_cards} | Rem: {remaining_count}/{total_cards}")
+        self.result_label.show()
         
-        if not self.remaining_cards:
-            self.result_label.setText("All questions mastered on first try! Quiz complete!")
-
-    def show_completion_message(self):
-        self.question_label.setText("Quiz Complete!")
+        # Disable options
+        for btn in self.option_buttons:
+            btn.setEnabled(False)
         
-        for button in self.option_buttons:
-            button.setVisible(False)
+        # Show Next button
+        self.next_btn.show()
         
-        total_cards = len(self.flashcard_set['cards'])
-        self.result_label.setText(f"Perfect! You mastered all {total_cards} cards!")
-        self.next_btn.setText("Restart Quiz")
+    def next_question(self):
+        """Move to next question using card deck system"""
+        if not self.card_deck:
+            self.show_completion()
+            return
+        
+        current_card = self.card_deck[0]
+        
+        # Only remove if answered correctly on FIRST TRY (no mistakes this appearance)
+        if not self.had_mistake_this_appearance:
+            # First try correct - remove from deck and add to mastered
+            self.card_deck.pop(0)
+            self.mastered_cards.append(current_card)
+        else:
+            # Had mistakes - move to back of deck for another try
+            self.card_deck.pop(0)
+            self.card_deck.append(current_card)
+        
+        # Uncheck all radio buttons to clear selection color
+        for btn in self.option_buttons:
+            btn.setChecked(False)
+        
+        # Load next question (which will reset had_mistake_this_appearance)
+        self.load_question()
+        
+    def show_completion(self):
+        """Show completion message with detailed stats"""
+        total_attempts = self.correct_count + self.wrong_count
+        accuracy = (self.correct_count / total_attempts * 100) if total_attempts > 0 else 0
+        
+        completion_text = f"🎉 All Cards Mastered!\n\n"
+        completion_text += f"Total Cards: {self.total_cards}\n"
+        completion_text += f"Correct Answers: {self.correct_count}\n"
+        completion_text += f"Wrong Answers: {self.wrong_count}\n"
+        completion_text += f"Accuracy: {accuracy:.1f}%"
+        
+        self.question_label.setText(completion_text)
+        
+        # Hide options
+        for btn in self.option_buttons:
+            btn.hide()
+        
+        self.result_label.hide()
+        
+        # Change Next button to show two options
+        self.next_btn.setText("🔄 Try Again")
         self.next_btn.clicked.disconnect()
         self.next_btn.clicked.connect(self.restart_quiz)
         self.next_btn.show()
-
-    def restart_quiz(self):
-        self.update_flashcard_set(self.flashcard_set)
-        self.next_btn.setText("Next Question")
-        self.next_btn.clicked.disconnect()
-        self.next_btn.clicked.connect(self.show_next_question)
     
-    def go_back(self):
-        try:
-            self.main_window.show_page(3)
-        except Exception as e:
-            import traceback
-            traceback.print_exc()
+    def restart_quiz(self):
+        """Restart the quiz with the same flashcard set"""
+        # Re-initialize with the same flashcard set
+        self.update_flashcard_set(self.flashcard_set)

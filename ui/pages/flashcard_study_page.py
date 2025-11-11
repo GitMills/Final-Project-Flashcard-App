@@ -3,7 +3,7 @@
 from PyQt6.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QLabel, QPushButton, 
                             QFrame, QProgressBar, QCheckBox)
 from PyQt6.QtCore import Qt
-from ui.visual.styles.styles import get_study_page_styles
+from ui.visual.styles.styles import get_study_page_styles, get_inline_label_styles, get_shuffle_button_active_style
 import random
 
 class FlashcardStudyPage(QWidget):
@@ -14,6 +14,7 @@ class FlashcardStudyPage(QWidget):
         self.current_card_index = 0
         self.is_flipped = False
         self.styles = get_study_page_styles()
+        self.label_styles = get_inline_label_styles()
         
         # Hybrid hint system variables
         self.current_hint_level = 0
@@ -24,8 +25,15 @@ class FlashcardStudyPage(QWidget):
         # Simple progress tracking
         self.card_progress = {}
         
+        # Shuffle toggle functionality
+        self.is_shuffled = False
+        self.original_card_order = []
+        
         self.setup_ui()
         if self.flashcard_set and self.flashcard_set['cards']:
+            # Store original order
+            import copy
+            self.original_card_order = copy.deepcopy(self.flashcard_set['cards'])
             self.load_card(0)
     
     def setup_ui(self):
@@ -33,15 +41,25 @@ class FlashcardStudyPage(QWidget):
         layout.setSpacing(15)
         layout.setContentsMargins(20, 20, 20, 20)
         
-        # HEADER - Just set name and back button
+        # HEADER - Set name, difficulty badge, and back button
         header_layout = QHBoxLayout()
         
-        # Set name - left
+        # Set name and difficulty - left side in vertical layout
+        name_difficulty_layout = QVBoxLayout()
+        name_difficulty_layout.setSpacing(2)
+        
         set_name_text = self.flashcard_set['set_name'] if self.flashcard_set else "No Set Selected"
         self.set_name_label = QLabel(set_name_text)
         self.set_name_label.setStyleSheet(self.styles["title"])
-        header_layout.addWidget(self.set_name_label)
+        name_difficulty_layout.addWidget(self.set_name_label)
         
+        # Difficulty level text below set name
+        difficulty = self.flashcard_set.get('difficulty', 'Easy')
+        self.difficulty_badge = QLabel(f"Difficulty level: {difficulty}")
+        self.difficulty_badge.setStyleSheet(self.label_styles["difficulty_badge_study"])
+        name_difficulty_layout.addWidget(self.difficulty_badge)
+        
+        header_layout.addLayout(name_difficulty_layout)
         header_layout.addStretch()
         
         # Back button - right
@@ -79,10 +97,10 @@ class FlashcardStudyPage(QWidget):
         controls_layout = QHBoxLayout()
         controls_layout.addStretch()
         
-        # Shuffle button
-        self.shuffle_btn = QPushButton("Shuffle")
+        # Shuffle toggle button
+        self.shuffle_btn = QPushButton("🔀 Shuffle")
         self.shuffle_btn.setStyleSheet(self.styles["shuffle_button"])
-        self.shuffle_btn.clicked.connect(self.shuffle_cards)
+        self.shuffle_btn.clicked.connect(self.toggle_shuffle)
         controls_layout.addWidget(self.shuffle_btn)
 
         # Correct button
@@ -126,12 +144,29 @@ class FlashcardStudyPage(QWidget):
         self.card_front.setStyleSheet(self.styles["card_front"])
         
         front_layout = QVBoxLayout(self.card_front)
+        front_layout.setSpacing(8)
+        front_layout.setContentsMargins(20, 20, 20, 20)
         
-        # Card counter on front - simple text like before
+        # QUESTION badge at top - smaller, no background
+        question_badge = QLabel("Question")
+        question_badge.setStyleSheet(self.label_styles["question_answer_badge"])
+        question_badge.setAlignment(Qt.AlignmentFlag.AlignLeft)
+        front_layout.addWidget(question_badge)
+        
+        # Card counter - centered
         self.front_counter = QLabel("Card 1 of 1")
         self.front_counter.setStyleSheet(self.styles["card_counter"])
         self.front_counter.setAlignment(Qt.AlignmentFlag.AlignCenter)
         front_layout.addWidget(self.front_counter)
+        
+        # Individual card difficulty indicator - centered below counter
+        self.front_card_difficulty = QLabel()
+        self.front_card_difficulty.setStyleSheet(self.label_styles["card_difficulty_indicator"])
+        self.front_card_difficulty.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        front_layout.addWidget(self.front_card_difficulty)
+        
+        # Add stretch before content to push it to center
+        front_layout.addStretch()
         
         # Front content
         self.front_label = QLabel()
@@ -148,20 +183,37 @@ class FlashcardStudyPage(QWidget):
         self.hint_label.hide()
         front_layout.addWidget(self.hint_label)
         
-        self.front_counter.setFixedHeight(15) 
+        # Add stretch after content to center everything
+        front_layout.addStretch() 
 
         # Create back card with counter
         self.card_back = QFrame()
         self.card_back.setStyleSheet(self.styles["card_back"])
         
         back_layout = QVBoxLayout(self.card_back)
+        back_layout.setSpacing(8)
+        back_layout.setContentsMargins(20, 20, 20, 20)
         
-        # Card counter on back - simple text like before
+        # ANSWER badge at top - smaller, no background
+        answer_badge = QLabel("Answer")
+        answer_badge.setStyleSheet(self.label_styles["question_answer_badge"])
+        answer_badge.setAlignment(Qt.AlignmentFlag.AlignLeft)
+        back_layout.addWidget(answer_badge)
+        
+        # Card counter - centered
         self.back_counter = QLabel("Card 1 of 1")
         self.back_counter.setStyleSheet(self.styles["card_counter"])
         self.back_counter.setAlignment(Qt.AlignmentFlag.AlignCenter)
         back_layout.addWidget(self.back_counter)
-        self.back_counter.setFixedHeight(15)
+        
+        # Individual card difficulty indicator - centered below counter
+        self.back_card_difficulty = QLabel()
+        self.back_card_difficulty.setStyleSheet(self.label_styles["card_difficulty_indicator"])
+        self.back_card_difficulty.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        back_layout.addWidget(self.back_card_difficulty)
+        
+        # Add stretch before content to push it to center
+        back_layout.addStretch()
 
         # Back content
         self.back_label = QLabel()
@@ -169,6 +221,9 @@ class FlashcardStudyPage(QWidget):
         self.back_label.setWordWrap(True)
         self.back_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         back_layout.addWidget(self.back_label)
+        
+        # Add stretch after content to center everything
+        back_layout.addStretch()
         
         # Start with front visible
         self.card_back.hide()
@@ -264,6 +319,17 @@ class FlashcardStudyPage(QWidget):
         try:
             if not self.flashcard_set or not self.flashcard_set['cards']:
                 return
+            
+            current_card = self.flashcard_set['cards'][self.current_card_index]
+            
+            # Check if custom hint exists
+            if 'custom_hint' in current_card and current_card['custom_hint']:
+                # Show custom hint
+                self.hint_label.setText(f"<b>Hint:</b> {current_card['custom_hint']}")
+                self.hint_label.show()
+                self.hint_btn.setText("Full Answer")
+                self.hint_btn.setEnabled(False)
+                return
                 
             self.current_hint_level += 1
             
@@ -351,6 +417,18 @@ class FlashcardStudyPage(QWidget):
         counter_text = f"Card {current} of {total}"
         self.front_counter.setText(counter_text)
         self.back_counter.setText(counter_text)
+        
+        # Update individual card difficulty indicator
+        current_card = self.flashcard_set['cards'][self.current_card_index]
+        card_difficulty = current_card.get('difficulty', '')
+        
+        if card_difficulty:
+            difficulty_text = f"Difficulty: {card_difficulty}"
+            self.front_card_difficulty.setText(difficulty_text)
+            self.back_card_difficulty.setText(difficulty_text)
+        else:
+            self.front_card_difficulty.setText("")
+            self.back_card_difficulty.setText("")
     
     def update_progress(self):
         # Calculate progress based on mastered cards (3 correct answers)
@@ -359,7 +437,7 @@ class FlashcardStudyPage(QWidget):
         
         for card in self.flashcard_set['cards']:
             card_id = card['question']  # Use question as unique ID
-            if card_id in self.card_progress and self.card_progress[card_id] >= 3:
+            if card_id in self.card_progress and self.card_progress[card_id] >= 2:
                 mastered_cards += 1
         
         progress = (mastered_cards / total_cards) * 100 if total_cards > 0 else 0
@@ -382,7 +460,7 @@ class FlashcardStudyPage(QWidget):
             self.card_progress[card_id] = max(0, self.card_progress[card_id] - 1)
         
         # Update database
-        learned = self.card_progress[card_id] >= 3
+        learned = self.card_progress[card_id] >= 2
         controller.update_card_progress(
             self.flashcard_set['set_name'],
             self.current_card_index,
@@ -408,7 +486,7 @@ class FlashcardStudyPage(QWidget):
         else:
             # End of set - show completion if all mastered
             mastered_count = sum(1 for card in self.flashcard_set['cards'] 
-                               if card['question'] in self.card_progress and self.card_progress[card['question']] >= 3)
+                               if card['question'] in self.card_progress and self.card_progress[card['question']] >= 2)
             
             if mastered_count == len(self.flashcard_set['cards']):
                 self.front_label.setText("🎉 Set Complete!")
@@ -420,8 +498,25 @@ class FlashcardStudyPage(QWidget):
                 # Loop back to beginning
                 self.load_card(0)
     
-    def shuffle_cards(self):
-        random.shuffle(self.flashcard_set['cards'])
+    def toggle_shuffle(self):
+        """Toggle between shuffled and original order"""
+        import copy
+        
+        if self.is_shuffled:
+            # Restore original order
+            self.flashcard_set['cards'] = copy.deepcopy(self.original_card_order)
+            self.is_shuffled = False
+            self.shuffle_btn.setText("🔀 Shuffle")
+            self.shuffle_btn.setStyleSheet(self.styles["shuffle_button"])
+        else:
+            # Shuffle cards
+            random.shuffle(self.flashcard_set['cards'])
+            self.is_shuffled = True
+            self.shuffle_btn.setText("↩️ Reset Order")
+            # Change button color to indicate shuffled state
+            self.shuffle_btn.setStyleSheet(get_shuffle_button_active_style())
+        
+        # Load first card and preserve progress
         self.load_card(0)
         self.correct_btn.setEnabled(True)
         self.wrong_btn.setEnabled(True)

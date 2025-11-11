@@ -25,9 +25,19 @@ class DataManager:
             set_data = {
                 'set_name': flashcard_set.set_name,
                 'created_date': flashcard_set.created_date,
-                'cards': [{'question': card.question, 'answer': card.answer} 
-                         for card in flashcard_set.cards]
+                'cards': []
             }
+            
+            # Add difficulty if exists
+            if hasattr(flashcard_set, 'difficulty'):
+                set_data['difficulty'] = flashcard_set.difficulty
+            
+            # Add cards with custom hints if they exist
+            for card in flashcard_set.cards:
+                card_data = {'question': card.question, 'answer': card.answer}
+                if hasattr(card, 'custom_hint') and card.custom_hint:
+                    card_data['custom_hint'] = card.custom_hint
+                set_data['cards'].append(card_data)
             
             # Add new set to existing sets
             all_sets.append(set_data)

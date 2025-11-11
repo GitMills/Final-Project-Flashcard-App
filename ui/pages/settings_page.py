@@ -174,25 +174,7 @@ class SettingsPage(QWidget):
             msg.setIconPixmap(QPixmap(icon_path).scaled(48, 48, Qt.AspectRatioMode.KeepAspectRatio))
             msg.setWindowIcon(QIcon(icon_path))
 
-        msg.setStyleSheet("""
-            QMessageBox {
-                background-color: #ffffff;
-                color: #000000;
-                font-size: 13px;
-            }
-            QLabel {
-                color: #000000;
-            }
-            QPushButton {
-                background-color: #cde5d4;
-                color: black;
-                border-radius: 8px;
-                padding: 6px 25px;
-                font-weight: bold;
-            }
-            QPushButton:hover {
-                background-color: #b4dbb8;
-            }
-        """)
+        from ui.visual.styles.styles import get_settings_message_box_style
+        msg.setStyleSheet(get_settings_message_box_style())
 
         msg.exec()

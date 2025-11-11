@@ -25,7 +25,7 @@ from ui.pages.flashcard_study_multiple_choice_page import MultipleChoiceStudy
 
 # Import our visual classes
 from ui.visual.animations import SidebarAnimations
-from ui.visual.styles.styles import get_sidebar_styles, get_main_window_styles
+from ui.visual.styles.styles import get_sidebar_styles, get_main_window_styles, get_main_window_timer_styles
 
 
 class MainWindow(QWidget):
@@ -34,6 +34,7 @@ class MainWindow(QWidget):
         self.sidebar_collapsed = True
         self.sidebar_styles = get_sidebar_styles()
         self.main_styles = get_main_window_styles()
+        self.timer_styles = get_main_window_timer_styles()
         
         # Initialize timer first
         self.pomodoro_timer = PomodoroTimer(self)
@@ -61,68 +62,62 @@ class MainWindow(QWidget):
         main_content_layout.setContentsMargins(0, 0, 0, 0)
         main_content_layout.setSpacing(0)
 
-        # Header with timer display
-        header_layout = QHBoxLayout()
+        # Header with timer display - NO STRETCH, stays at top
+        header_widget = QWidget()
+        header_widget.setFixedHeight(55)  # Fixed height for header
+        header_layout = QHBoxLayout(header_widget)
+        header_layout.setContentsMargins(5, 5, 5, 5)
+        header_layout.setSpacing(10)
         
-        # Burger button
+        # Burger button - fixed size, positioned at top
         self.toggle_btn = QPushButton("☰")
-        self.toggle_btn.setMinimumSize(45, 45)
+        self.toggle_btn.setFixedSize(45, 45)
         self.toggle_btn.setStyleSheet(self.sidebar_styles["toggle_button"])
         self.toggle_btn.clicked.connect(self.toggle_sidebar)
         header_layout.addWidget(self.toggle_btn)
 
         # Timer display (top-right) - START HIDDEN
         header_layout.addStretch()
-        self.timer_display = QLabel("Study: 25:00")
-        self.timer_display.setStyleSheet("color: #A6E3A1; font-size: 14px; font-weight: bold; padding: 10px;")
+        
+        # Timer display with beautiful frame - MORE VISIBLE - Show session format from start
+        self.timer_display = QLabel("Study (0/4): 25:00")
+        self.timer_display.setStyleSheet(self.timer_styles["timer_display"])
         self.timer_display.setVisible(False)  # START HIDDEN
         header_layout.addWidget(self.timer_display)
+        
+        # Spacing between timer display and start button
+        header_layout.addSpacing(12)
 
         # Pomodoro control button - START HIDDEN
-        self.pomodoro_btn = QPushButton("▶ Start Timer")
-        self.pomodoro_btn.setMinimumSize(100, 35)
-        self.pomodoro_btn.setStyleSheet("""
-            QPushButton {
-                background-color: #A6E3A1;
-                color: #1E1E2E;
-                border: none;
-                border-radius: 15px;
-                font-weight: bold;
-                padding: 5px;
-            }
-            QPushButton:hover {
-                background-color: #94D2A2;
-            }
-        """)
+        self.pomodoro_btn = QPushButton("▶ Start")
+        self.pomodoro_btn.setMinimumSize(95, 36)
+        self.pomodoro_btn.setMaximumSize(115, 36)
+        self.pomodoro_btn.setStyleSheet(self.timer_styles["timer_start_button"])
         self.pomodoro_btn.clicked.connect(self.toggle_pomodoro_timer)
         self.pomodoro_btn.setVisible(False)  # START HIDDEN
         header_layout.addWidget(self.pomodoro_btn)
+        
+        # Spacing between start button and settings button
+        header_layout.addSpacing(10)
 
         # Timer settings button - START HIDDEN
         self.timer_settings_btn = QPushButton("⚙")
-        self.timer_settings_btn.setMinimumSize(35, 35)
-        self.timer_settings_btn.setStyleSheet("""
-            QPushButton {
-                background-color: #585B70;
-                color: #CDD6F4;
-                border: none;
-                border-radius: 15px;
-                font-weight: bold;
-            }
-            QPushButton:hover {
-                background-color: #6C7086;
-            }
-        """)
+        self.timer_settings_btn.setMinimumSize(36, 36)
+        self.timer_settings_btn.setMaximumSize(36, 36)
+        self.timer_settings_btn.setStyleSheet(self.timer_styles["timer_settings_button"])
         self.timer_settings_btn.clicked.connect(self.show_timer_settings)
         self.timer_settings_btn.setVisible(False)  # START HIDDEN
         header_layout.addWidget(self.timer_settings_btn)
+        
+        # Add right margin to move timer away from edge
+        header_layout.addSpacing(20)
 
         # Create stacked widget
         self.pages_stack = QStackedWidget()
         self.create_pages()
 
         # Add to main layout
-        main_content_layout.addLayout(header_layout)
+        main_content_layout.addWidget(header_widget)
         main_content_layout.addWidget(self.pages_stack)
 
         # Add sidebar and main content to main layout
@@ -265,9 +260,15 @@ class MainWindow(QWidget):
         self.sidebar_collapsed = True
     
     def navigate_to_page(self, page_index):
-        self.show_page(page_index)
+        # Close sidebar INSTANTLY before page change
         if not self.sidebar_collapsed:
-            self.collapse_sidebar()
+            self.sidebar.setMinimumWidth(0)
+            self.sidebar.setMaximumWidth(0)
+            self.sidebar.setStyleSheet(self.sidebar_styles["sidebar_collapsed"])
+            self.sidebar_collapsed = True
+        
+        # Then change page
+        self.show_page(page_index)
     
     def show_page(self, page_index):
         self.pages_stack.setCurrentIndex(page_index)
@@ -276,20 +277,46 @@ class MainWindow(QWidget):
     
     # NEW PAGES THROUGH BUTTONS
     def show_existing_flashcards(self):
-        # Show the Existing Flashcard page (index 6)
-        self.show_page(6)  # Existing Flashcards is at index 6
+        # Close sidebar INSTANTLY before page change
         if not self.sidebar_collapsed:
-            self.collapse_sidebar()
+            self.sidebar.setMinimumWidth(0)
+            self.sidebar.setMaximumWidth(0)
+            self.sidebar.setStyleSheet(self.sidebar_styles["sidebar_collapsed"])
+            self.sidebar_collapsed = True
+        
+        # Show the Existing Flashcard page (index 6)
+        self.show_page(6)
     
     def show_create_flashcard(self):
-        # Show the create_flashcard_page page (index 5) 
-        self.show_page(5)  # Create Flashcards is at index 5
+        # Close sidebar INSTANTLY before page change
         if not self.sidebar_collapsed:
-            self.collapse_sidebar()
+            self.sidebar.setMinimumWidth(0)
+            self.sidebar.setMaximumWidth(0)
+            self.sidebar.setStyleSheet(self.sidebar_styles["sidebar_collapsed"])
+            self.sidebar_collapsed = True
+        
+        # Show the create_flashcard_page page (index 5)
+        # Reset the form to ensure clean state
+        create_page = self.pages_stack.widget(5)
+        if create_page and hasattr(create_page, 'reset_form'):
+            create_page.reset_form()
+        
+        # Scroll to top to show title
+        if create_page and hasattr(create_page, '_scroll_to_top'):
+            create_page._scroll_to_top()
+        
+        self.show_page(5)
 
     def show_flashcard_study_with_set(self, flashcard_set):
         # Update study page with specific flashcard set and show it
         try:
+            # Close sidebar INSTANTLY before page change
+            if not self.sidebar_collapsed:
+                self.sidebar.setMinimumWidth(0)
+                self.sidebar.setMaximumWidth(0)
+                self.sidebar.setStyleSheet(self.sidebar_styles["sidebar_collapsed"])
+                self.sidebar_collapsed = True
+            
             # Simply update the existing study page and show it
             self.flashcard_study_page.flashcard_set = flashcard_set
             self.flashcard_study_page.current_card_index = 0
@@ -301,9 +328,6 @@ class MainWindow(QWidget):
             self.flashcard_study_page.load_card(0)
             
             self.show_page(7)
-            
-            if not self.sidebar_collapsed:
-                self.collapse_sidebar()
                 
         except Exception as e:
             print(f"Error: {e}")
@@ -328,15 +352,19 @@ class MainWindow(QWidget):
 
     def show_multiple_choice_study(self, flashcard_set):
         # Show multiple choice study interface
-        try:            
+        try:
+            # Close sidebar INSTANTLY before page change
+            if not self.sidebar_collapsed:
+                self.sidebar.setMinimumWidth(0)
+                self.sidebar.setMaximumWidth(0)
+                self.sidebar.setStyleSheet(self.sidebar_styles["sidebar_collapsed"])
+                self.sidebar_collapsed = True
+            
             # Update the existing multiple choice page with the flashcard set
             self.multiple_choice_study_page.update_flashcard_set(flashcard_set)
             
             # Show the multiple choice page
-            self.pages_stack.setCurrentIndex(8)  
-            
-            if not self.sidebar_collapsed:
-                self.collapse_sidebar()
+            self.pages_stack.setCurrentIndex(8)
                 
         except Exception as e:
             import traceback

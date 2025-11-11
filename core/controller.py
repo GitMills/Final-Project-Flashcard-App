@@ -9,7 +9,7 @@ class FlashcardController:
         # Initialize data manager for file operations
         self.data_manager = DataManager()
     
-    def create_flashcard_set(self, set_name: str, cards_data: List[Dict]) -> str:
+    def create_flashcard_set(self, set_name: str, cards_data: List[Dict], difficulty: str = 'Easy') -> str:
         # Validate set name
         if not set_name.strip():
             return "Set name cannot be empty"
@@ -18,11 +18,17 @@ class FlashcardController:
         if not cards_data:
             return "At least one flashcard required"
         
-        # Convert dictionary data to Flashcard objects
-        flashcards = [Flashcard(q['question'], q['answer']) for q in cards_data]
+        # Convert dictionary data to Flashcard objects with custom hints
+        flashcards = []
+        for q in cards_data:
+            card = Flashcard(q['question'], q['answer'])
+            if 'custom_hint' in q:
+                card.custom_hint = q['custom_hint']
+            flashcards.append(card)
         
-        # Create flashcard set
+        # Create flashcard set with difficulty
         flashcard_set = FlashcardSet(set_name, flashcards)
+        flashcard_set.difficulty = difficulty
         
         # Save to file and return result
         if self.data_manager.save_flashcard_set(flashcard_set):

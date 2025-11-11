@@ -25,13 +25,10 @@ class BootupPage(QWidget):
         self.setLayout(main_layout)
     
         # Create a container frame for the box effect
+        from ui.visual.styles.styles import get_bootup_container_style
         container = QFrame()
         container.setFixedSize(500, 400)  # Fixed size for consistent centering
-        container.setStyleSheet("""
-            QFrame {
-                background-color: transparent;
-            }
-        """)
+        container.setStyleSheet(get_bootup_container_style())
         
         # Container layout
         layout = QVBoxLayout(container)

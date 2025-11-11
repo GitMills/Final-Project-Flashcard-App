@@ -5,7 +5,7 @@ from PyQt6.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QLabel, QListWid
                             QDialog, QApplication, QLineEdit)
 from PyQt6.QtCore import Qt, QSize
 from PyQt6.QtGui import QPixmap, QIcon
-from ui.visual.styles.styles import get_all_cards_styles
+from ui.visual.styles.styles import get_all_cards_styles, get_inline_label_styles, get_combo_box_styles
 from ui.pages.flashcard_study_multiple_choice_page import MultipleChoiceStudy
 from utils.path_helper import get_asset_path
 
@@ -14,6 +14,8 @@ class AllCards(QWidget):
         super().__init__()
         self.main_window = main_window
         self.styles = get_all_cards_styles()
+        self.label_styles = get_inline_label_styles()
+        self.combo_styles = get_combo_box_styles()
         self.all_sets = []  # Store all sets for filtering
         self.setup_ui()  # Setup UI first
         self.load_flashcards()  # Then load data
@@ -21,7 +23,7 @@ class AllCards(QWidget):
     def setup_ui(self):
         layout = QVBoxLayout()
         layout.setSpacing(15)
-        layout.setContentsMargins(20, 20, 20, 20)
+        layout.setContentsMargins(20, 20, 0, 20)  # No right margin for scrollbar
         
         # Title
         title = QLabel("All Flashcard Sets")
@@ -59,6 +61,22 @@ class AllCards(QWidget):
         self.search_input.textChanged.connect(self.filter_sets)
         top_controls_layout.addWidget(self.search_input)
         
+        # Small space
+        top_controls_layout.addSpacing(10)
+        
+        # DIFFICULTY FILTER Label
+        difficulty_label = QLabel("Difficulty level:")
+        difficulty_label.setStyleSheet(self.label_styles["difficulty_filter_label"])
+        top_controls_layout.addWidget(difficulty_label)
+        
+        # DIFFICULTY FILTER ComboBox
+        from PyQt6.QtWidgets import QComboBox
+        self.difficulty_filter = QComboBox()
+        self.difficulty_filter.addItems(["All", "Easy", "Medium", "Hard"])
+        self.difficulty_filter.setStyleSheet(self.combo_styles["difficulty_filter"])
+        self.difficulty_filter.currentTextChanged.connect(self.filter_sets)
+        top_controls_layout.addWidget(self.difficulty_filter)
+        
         # STRETCH to push everything to the left
         top_controls_layout.addStretch()
         
@@ -74,13 +92,14 @@ class AllCards(QWidget):
         # Scroll area for flashcard sets
         self.scroll_area = QScrollArea()
         self.scroll_area.setWidgetResizable(True)
-        self.scroll_area.setStyleSheet(self.styles["scroll_area"])
+        self.scroll_area.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOn)
         
         # Container for flashcard set cards
         self.sets_container = QWidget()
         self.sets_layout = QGridLayout(self.sets_container)
         self.sets_layout.setSpacing(15)
         self.sets_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
+        self.sets_layout.setContentsMargins(0, 0, 100, 20)  # Right margin for scrollbar
         
         self.scroll_area.setWidget(self.sets_container)
         layout.addWidget(self.scroll_area)
@@ -88,8 +107,9 @@ class AllCards(QWidget):
         self.setLayout(layout)
     
     def filter_sets(self):
-        """Filter flashcard sets based on search text"""
+        """Filter flashcard sets based on search text and difficulty"""
         search_text = self.search_input.text().strip().lower()
+        difficulty_filter = self.difficulty_filter.currentText()
         
         # Clear existing sets
         for i in reversed(range(self.sets_layout.count())):
@@ -97,15 +117,20 @@ class AllCards(QWidget):
             if widget:
                 widget.setParent(None)
         
-        if not search_text:
-            # If search is empty, show all sets and HIDE no results label
-            self.no_results_label.hide()
-            self.display_sets(self.all_sets)
-            return
+        # Start with all sets
+        filtered_sets = self.all_sets
         
-        # Filter sets that start with the search text (case-insensitive)
-        filtered_sets = [
-            flashcard_set for flashcard_set in self.all_sets
+        # Apply difficulty filter
+        if difficulty_filter != "All":
+            filtered_sets = [
+                flashcard_set for flashcard_set in filtered_sets
+                if flashcard_set.get('difficulty', 'Easy') == difficulty_filter
+            ]
+        
+        # Apply search filter
+        if search_text:
+            filtered_sets = [
+                flashcard_set for flashcard_set in filtered_sets
             if flashcard_set['set_name'].lower().startswith(search_text)
         ]
         
@@ -231,6 +256,12 @@ class AllCards(QWidget):
         name_label.setWordWrap(True)
         card_layout.addWidget(name_label)
         
+        # Difficulty level text below set name
+        difficulty = flashcard_set.get('difficulty', 'Easy')
+        difficulty_label = QLabel(f"Difficulty level: {difficulty}")
+        difficulty_label.setStyleSheet(self.label_styles["difficulty_level_card"])
+        card_layout.addWidget(difficulty_label)
+        
         # Set info
         info_text = f"Cards: {len(flashcard_set['cards'])}\nCreated: {flashcard_set['created_date']}"
         info_label = QLabel(info_text)
@@ -348,43 +379,8 @@ class AllCards(QWidget):
 
     def load_flashcards_into_create_page(self, create_page, flashcard_set):
         """Load existing flashcard set data into the create page for editing"""
-        try:
-            # Clear existing form
-            create_page.reset_form()
-            
-            # Set the flashcard set name
-            create_page.name_input.setText(flashcard_set['set_name'])
-            
-            # Remove the initial 4 empty cards (since we're loading existing ones)
-            for i in range(create_page.scroll_layout.count() - 1, -1, -1):
-                item = create_page.scroll_layout.itemAt(i)
-                if item and item.widget():
-                    widget = item.widget()
-                    if isinstance(widget, QFrame) and hasattr(widget, 'question_input'):
-                        create_page.scroll_layout.removeWidget(widget)
-                        widget.deleteLater()
-            
-            # Reset card counter
-            create_page.current_card_number = 1
-            
-            # Add cards from the existing set
-            for card in flashcard_set['cards']:
-                create_page.add_flashcard_input()
-                
-                # Get the most recently added card frame
-                last_item = create_page.scroll_layout.itemAt(create_page.scroll_layout.count() - 1)
-                if last_item and last_item.widget():
-                    card_frame = last_item.widget()
-                    if hasattr(card_frame, 'question_input') and hasattr(card_frame, 'answer_input'):
-                        # Populate with existing data
-                        card_frame.question_input.setText(card['question'])
-                        card_frame.answer_input.setPlainText(card['answer'])
-            
-            # Store the original set name for update purposes
-            create_page.original_set_name = flashcard_set['set_name']
-            
-        except Exception as e:
-            QMessageBox.critical(self, "Error", f"Failed to load flashcards for editing: {str(e)}")
+        # Simply call the new method in create_page
+        create_page.load_flashcards_for_editing(flashcard_set)
 
     def show_mc_warning(self, dialog):
         # Show warning when not enough cards for multiple choice
@@ -403,6 +399,32 @@ class AllCards(QWidget):
         self.main_window.show_flashcard_study_with_set(flashcard_set)
 
     def start_multiple_choice_study(self, flashcard_set, dialog):
+        # Check if there are enough unique answers for multiple choice
+        unique_answers = set(card['answer'] for card in flashcard_set['cards'])
+        
+        if len(unique_answers) < 4:
+            # Show warning - not enough unique answers
+            msg_box = QMessageBox(self)
+            msg_box.setWindowTitle("Not Enough Options")
+            msg_box.setText(f"This flashcard set only has {len(unique_answers)} unique answer(s).")
+            msg_box.setInformativeText("Multiple choice requires at least 4 unique answers.\n\nPlease add more cards with different answers or use Flip Card mode instead.")
+            msg_box.setStyleSheet(self.styles["warning_message_box"])
+            
+            # Add custom icon
+            icon_path = get_asset_path("warning_icon.png")
+            if icon_path:
+                custom_icon = QPixmap(icon_path)
+                if not custom_icon.isNull():
+                    screen = self.main_window.screen()
+                    screen_size = screen.availableGeometry()
+                    icon_size = int(min(screen_size.width(), screen_size.height()) * 0.05)
+                    msg_box.setIconPixmap(custom_icon.scaled(icon_size, icon_size, Qt.AspectRatioMode.KeepAspectRatio))
+            
+            msg_box.setStandardButtons(QMessageBox.StandardButton.Ok)
+            msg_box.exec()
+            # Don't close dialog - let user choose another option
+            return
+        
         # Start multiple choice study
         dialog.accept()
         self.main_window.show_multiple_choice_study(flashcard_set)
