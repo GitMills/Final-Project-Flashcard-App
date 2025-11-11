@@ -119,3 +119,18 @@ class FadeWidget(QWidget):
             except Exception:
                 pass
             
+class FadeInMainWindow(QObject):
+    def __init__(self, main_window, duration=600):
+        super().__init__(main_window)
+        self.main_window = main_window
+        self.effect = QGraphicsOpacityEffect()
+        self.main_window.setGraphicsEffect(self.effect)
+        self.anim = QPropertyAnimation(self.effect, b"opacity")
+        self.anim.setDuration(duration)
+        self.anim.setEasingCurve(QEasingCurve.Type.InOutQuad)
+
+    def fade_in(self):
+        self.effect.setOpacity(0.0)
+        self.anim.setStartValue(0.0)
+        self.anim.setEndValue(1.0)
+        self.anim.start()
