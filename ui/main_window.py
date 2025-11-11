@@ -249,6 +249,7 @@ class MainWindow(QWidget):
         self.pages_stack.addWidget(self.existing_flashcard_page) # index 6
         self.pages_stack.addWidget(self.flashcard_study_page) # index 7
         self.pages_stack.addWidget(self.multiple_choice_study_page) # index 8
+        self.pages_stack.addWidget(self.accounts_page)     # index 9
         
         self.setup_shortcut_flashcard()
        
