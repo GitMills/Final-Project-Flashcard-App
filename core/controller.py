@@ -5,9 +5,13 @@ from .data_manager import DataManager
 from .flashcard_model import Flashcard, FlashcardSet
 
 class FlashcardController:
-    def __init__(self):
-        # Initialize data manager for file operations
-        self.data_manager = DataManager()
+    def __init__(self, username=None):
+        # Initialize data manager for file operations with username
+        self.data_manager = DataManager(username)
+    
+    def set_username(self, username):
+        """Update the username for user-specific flashcard storage"""
+        self.data_manager.set_username(username)
     
     def create_flashcard_set(self, set_name: str, cards_data: List[Dict], difficulty: str = 'Easy') -> str:
         # Validate set name

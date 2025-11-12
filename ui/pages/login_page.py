@@ -29,19 +29,22 @@ class LoginPage(QWidget):
         self.subtitle.setStyleSheet("color: #555; font-size: 14px;")
 
         # Inputs
-        self.username_input = QLineEdit()
-        self.username_input.setPlaceholderText("Username")
-        self.username_input.setFixedWidth(250)
-
         self.fullname_input = QLineEdit()
         self.fullname_input.setPlaceholderText("Name")
         self.fullname_input.setFixedWidth(250)
         self.fullname_input.hide()  # only show in create mode
+        self.fullname_input.returnPressed.connect(self.handle_action)
+
+        self.username_input = QLineEdit()
+        self.username_input.setPlaceholderText("Username")
+        self.username_input.setFixedWidth(250)
+        self.username_input.returnPressed.connect(self.handle_action)
 
         self.password_input = QLineEdit()
         self.password_input.setPlaceholderText("Password")
         self.password_input.setEchoMode(QLineEdit.EchoMode.Password)
         self.password_input.setFixedWidth(250)
+        self.password_input.returnPressed.connect(self.handle_action)
 
         # Buttons
         self.login_btn = QPushButton("Login")
@@ -57,8 +60,8 @@ class LoginPage(QWidget):
         self.layout.addWidget(self.title, alignment=Qt.AlignmentFlag.AlignCenter)
         self.layout.addWidget(self.subtitle, alignment=Qt.AlignmentFlag.AlignCenter)
         self.layout.addSpacing(20)
-        self.layout.addWidget(self.username_input, alignment=Qt.AlignmentFlag.AlignCenter)
         self.layout.addWidget(self.fullname_input, alignment=Qt.AlignmentFlag.AlignCenter)
+        self.layout.addWidget(self.username_input, alignment=Qt.AlignmentFlag.AlignCenter)
         self.layout.addWidget(self.password_input, alignment=Qt.AlignmentFlag.AlignCenter)
         self.layout.addSpacing(15)
         self.layout.addWidget(self.login_btn, alignment=Qt.AlignmentFlag.AlignCenter)
@@ -119,8 +122,9 @@ class LoginPage(QWidget):
             with open(PROFILE_PATH, "w") as f:
                 json.dump(data, f, indent=4)
 
-            QMessageBox.information(self, "Success", f"Account created for {full_name}!")
-            self.on_login_success(username, is_new=True)
+            # Reset to login mode after successful registration
+            self.reset_fields()
+            self.toggle_mode()  # Switch back to login mode
 
         else:
             # Login
@@ -129,5 +133,4 @@ class LoginPage(QWidget):
                 return
 
             full_name = data[username]["full_name"]
-            QMessageBox.information(self, "Welcome Back", f"Hello, {full_name}!")
             self.on_login_success(username, is_new=False)

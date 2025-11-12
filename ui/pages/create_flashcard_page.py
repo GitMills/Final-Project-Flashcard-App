@@ -371,7 +371,8 @@ class CreateFlashcard(QWidget):
             
             # Use controller to save the flashcard set
             from core.controller import FlashcardController
-            controller = FlashcardController()
+            username = self.main_window.get_current_username() if self.main_window else None
+            controller = FlashcardController(username)
             
             # CHECK IF WE'RE UPDATING AN EXISTING SET
             was_editing = hasattr(self, 'original_set_name') and self.original_set_name
@@ -411,7 +412,8 @@ class CreateFlashcard(QWidget):
                 if was_editing:
                     # Reload the updated set to continue editing
                     from core.controller import FlashcardController
-                    controller = FlashcardController()
+                    username = self.main_window.get_current_username() if self.main_window else None
+                    controller = FlashcardController(username)
                     updated_set = controller.get_study_set(set_name)
                     if updated_set:
                         self.load_flashcards_for_editing(updated_set)
@@ -661,7 +663,8 @@ class CreateFlashcard(QWidget):
         if msg_box.exec() == QMessageBox.StandardButton.Yes:
             # Reload the original flashcard set
             from core.controller import FlashcardController
-            controller = FlashcardController()
+            username = self.main_window.get_current_username() if self.main_window else None
+            controller = FlashcardController(username)
             flashcard_set = controller.get_study_set(self.original_set_name)
             
             if flashcard_set:

@@ -233,7 +233,7 @@ class MainWindow(QWidget):
         self.accounts_page = AccountsPage(self.data, None, self.profile_page, self.fade_to_page) #BAGONG ADD (LOGIN)
         
         self.settings_page = SettingsPage()
-        self.help_page = HelpPage()
+        self.help_page = HelpPage(self)
         self.all_cards_page = AllCards(self)
         self.create_flashcard_page = CreateFlashcard(self)
         self.existing_flashcard_page = ExistingFlashcard(self)
@@ -383,6 +383,13 @@ class MainWindow(QWidget):
             self.flashcard_study_page.current_card_index = 0
             self.flashcard_study_page.is_flipped = False
             
+            # Reset shuffle state and original order for new set
+            import copy
+            self.flashcard_study_page.original_card_order = copy.deepcopy(flashcard_set['cards'])
+            self.flashcard_study_page.is_shuffled = False
+            self.flashcard_study_page.shuffle_btn.setText("🔀 Shuffle")
+            self.flashcard_study_page.shuffle_btn.setStyleSheet(self.flashcard_study_page.styles["shuffle_button"])
+            
             # UPDATE THE SET NAME LABEL
             self.flashcard_study_page.set_name_label.setText(flashcard_set['set_name'])
             
@@ -459,6 +466,7 @@ class MainWindow(QWidget):
 
         # Use AppData instead of raw file access
         self.data.username = username
+        self.current_username = username  # Store current username for flashcard storage
         profile = self.data.get_profile(username)
         full_name = profile.get("full_name", username)
 
@@ -470,3 +478,7 @@ class MainWindow(QWidget):
                 print(f"👤 Loaded profile for: {username}")
             except Exception as e:
                 print(f"❌ Error loading profile: {e}")
+    
+    def get_current_username(self):
+        """Get the current logged-in username for flashcard operations"""
+        return getattr(self, 'current_username', None)
