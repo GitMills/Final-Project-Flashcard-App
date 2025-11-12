@@ -8,9 +8,9 @@ from PyQt6.QtGui import QFont
 
 
 class HelpPage(QWidget):
-    def __init__(self, parent_window=None):
+    def __init__(self, main_window=None):
         super().__init__()
-        self.parent_window = parent_window
+        self.main_window = main_window
         self.current_step = 0
         self.setup_ui()
         self.update_tutorial_step()
@@ -79,7 +79,7 @@ class HelpPage(QWidget):
         self.next_btn.clicked.connect(self.next_step)
         btn_layout.addWidget(self.next_btn, alignment=Qt.AlignmentFlag.AlignCenter)
 
-        self.back_btn = QPushButton("⬅ Back to Main")
+        self.back_btn = QPushButton("⬅ Back to Home")
         self.back_btn.setFont(QFont("Arial Rounded MT Bold", 14))
         self.back_btn.setStyleSheet("""
             QPushButton {
@@ -92,10 +92,7 @@ class HelpPage(QWidget):
                 background-color: #666;
             }
         """)
-        if self.parent_window:
-            self.back_btn.clicked.connect(
-                lambda: self.parent_window.help_page.fade_out(self.parent_window.main_page)
-            )
+        self.back_btn.clicked.connect(self.go_back_to_home)
         btn_layout.addWidget(self.back_btn, alignment=Qt.AlignmentFlag.AlignCenter)
 
         main_layout.addLayout(btn_layout)
@@ -149,10 +146,20 @@ class HelpPage(QWidget):
         if self.current_step < 3:
             self.update_tutorial_step()
         else:
-            # Return to main page when done
-            if self.parent_window:
-                self.parent_window.help_page.fade_out(self.parent_window.main_page)
-
-
-        # === Background ===
-        self.setStyleSheet("background-color: #FFF6E9;")
+            # Return to home page when done
+            self.go_back_to_home()
+    
+    def go_back_to_home(self):
+        """Navigate back to home page"""
+        if self.main_window and hasattr(self.main_window, 'show_page'):
+            self.main_window.show_page(0)  # Go to home page (index 0)
+    
+    def reset_tutorial(self):
+        """Reset tutorial to the first step"""
+        self.current_step = 0
+        self.update_tutorial_step()
+    
+    def showEvent(self, event):
+        """Called when the page is shown - reset to first step"""
+        super().showEvent(event)
+        self.reset_tutorial()

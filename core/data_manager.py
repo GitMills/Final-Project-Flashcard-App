@@ -7,10 +7,24 @@ from typing import List, Dict
 from .flashcard_model import FlashcardSet, Flashcard
 
 class DataManager:
-    def __init__(self):
+    def __init__(self, username=None):
         self.data_dir = "data"
-        self.data_file = os.path.join(self.data_dir, "flashcard_sets.json")
+        self.username = username
+        self.data_file = self._get_user_data_file()
         self._ensure_data_directory()
+    
+    def _get_user_data_file(self):
+        """Get the flashcard file path for the current user"""
+        if self.username:
+            return os.path.join(self.data_dir, f"flashcard_sets_{self.username}.json")
+        else:
+            # Fallback to shared file if no username
+            return os.path.join(self.data_dir, "flashcard_sets.json")
+    
+    def set_username(self, username):
+        """Update the username and data file path"""
+        self.username = username
+        self.data_file = self._get_user_data_file()
     
     def _ensure_data_directory(self):
         # Create data directory if it doesn't exist

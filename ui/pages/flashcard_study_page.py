@@ -445,7 +445,8 @@ class FlashcardStudyPage(QWidget):
     
     def mark_card(self, correct):
         from core.controller import FlashcardController
-        controller = FlashcardController()
+        username = self.main_window.get_current_username() if self.main_window else None
+        controller = FlashcardController(username)
         
         current_card = self.flashcard_set['cards'][self.current_card_index]
         card_id = current_card['question']
@@ -509,8 +510,15 @@ class FlashcardStudyPage(QWidget):
             self.shuffle_btn.setText("🔀 Shuffle")
             self.shuffle_btn.setStyleSheet(self.styles["shuffle_button"])
         else:
-            # Shuffle cards
-            random.shuffle(self.flashcard_set['cards'])
+            # Make sure we have the original order saved
+            if not self.original_card_order:
+                self.original_card_order = copy.deepcopy(self.flashcard_set['cards'])
+            
+            # Create a shuffled copy
+            shuffled_cards = copy.deepcopy(self.flashcard_set['cards'])
+            random.shuffle(shuffled_cards)
+            self.flashcard_set['cards'] = shuffled_cards
+            
             self.is_shuffled = True
             self.shuffle_btn.setText("↩️ Reset Order")
             # Change button color to indicate shuffled state
@@ -524,7 +532,8 @@ class FlashcardStudyPage(QWidget):
     
     def reset_progress(self):
         from core.controller import FlashcardController
-        controller = FlashcardController()
+        username = self.main_window.get_current_username() if self.main_window else None
+        controller = FlashcardController(username)
         
         for i in range(len(self.flashcard_set['cards'])):
             controller.update_card_progress(

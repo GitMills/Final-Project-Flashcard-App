@@ -180,7 +180,8 @@ class AllCards(QWidget):
             
             # Import and use controller to load saved sets
             from core.controller import FlashcardController
-            controller = FlashcardController()
+            username = self.main_window.get_current_username() if self.main_window else None
+            controller = FlashcardController(username)
             self.all_sets = controller.get_all_sets()
             
             # Display all sets
@@ -456,7 +457,8 @@ class AllCards(QWidget):
         
         if reply == QMessageBox.StandardButton.Yes:
             from core.controller import FlashcardController
-            controller = FlashcardController()
+            username = self.main_window.get_current_username() if self.main_window else None
+            controller = FlashcardController(username)
             
             error_message = controller.delete_flashcard_set(set_name)
             
