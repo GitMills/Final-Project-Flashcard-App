@@ -1827,3 +1827,110 @@ def get_global_selection_fix():
             background-color: #B4D7FF; 
         }
     """
+    
+    
+#ADDED (LOGIN, PROFILE, ACCOUNTS PAGES)
+def get_profile_page_styles():
+    """Styles for the Profile Page"""
+    return {
+        "page": """
+            QWidget {
+                background-color: #FFF5E5;
+                color: #2C3E50;
+                font-family: 'Poppins';
+            }
+        """,
+        "title": """
+            QLabel {
+                font-size: 24px;
+                font-weight: bold;
+                color: #2C3E50;
+            }
+        """,
+        "label": """
+            QLabel {
+                color: #2C3E50;
+                font-size: 14px;
+                font-weight: 500;
+            }
+        """,
+        "input": """
+            QLineEdit, QSpinBox {
+                background-color: #FFFFFF;
+                color: #2C3E50;
+                border: 2px solid #CBD5E0;
+                border-radius: 6px;
+                padding: 6px;
+            }
+        """,
+        "button": """
+            QPushButton {
+                background-color: #FC483D;
+                color: white;
+                border-radius: 8px;
+                padding: 8px 16px;
+                font-weight: bold;
+            }
+            QPushButton:hover {
+                background-color: #434190;
+            }
+        """,
+        "switch_button": """
+            QPushButton {
+                background-color: #FC483D;
+                color: white;
+                padding: 8px 16px;
+                border-radius: 8px;
+                font-weight: bold;
+            }
+            QPushButton:hover {
+                background-color: #434190;
+            }
+        """
+    }
+
+
+def get_accounts_page_styles():
+    """Styles for the Accounts Page"""
+    return {
+        "page": """
+            QWidget {
+                background-color: #FFF5E5;
+                color: #2C3E50;
+                font-family: 'Poppins';
+            }
+        """,
+        "title": """
+            QLabel {
+                font-size: 22px;
+                font-weight: bold;
+                color: #2C3E50;
+            }
+        """,
+        "list": """
+            QListWidget {
+                border: 1px solid #A0AEC0;
+                border-radius: 8px;
+                background-color: #FFFFFF;
+                color: #2C3E50;
+                font-size: 15px;
+                padding: 6px;
+            }
+            QListWidget::item:selected {
+                background-color: #FC483D;
+                color: white;
+            }
+        """,
+        "button": """
+            QPushButton {
+                background-color: #FC483D;
+                color: white;
+                border-radius: 8px;
+                padding: 8px 14px;
+                font-weight: bold;
+            }
+            QPushButton:hover {
+                background-color: #434190;
+            }
+        """
+    }

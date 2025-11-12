@@ -1,9 +1,9 @@
-# ui/pages/accounts_page.py
-
 from PyQt6.QtWidgets import (
     QWidget, QVBoxLayout, QLabel, QPushButton, QListWidget, QListWidgetItem, QMessageBox
 )
 from PyQt6.QtCore import Qt
+from ui.visual.styles.styles import get_accounts_page_styles  # Import centralized styles
+
 
 class AccountsPage(QWidget):
     """
@@ -12,13 +12,10 @@ class AccountsPage(QWidget):
     """
 
     def __init__(self, data, login_page, profile_page, fade_to_page):
-        """
-        :param data: Shared data object (stores username, account list, etc.)
-        :param login_page: Reference to LoginPage
-        :param profile_page: Reference to ProfilePage
-        :param fade_to_page: Function that handles fade transitions between pages
-        """
         super().__init__()
+        self.styles = get_accounts_page_styles()
+        self.setStyleSheet(self.styles["page"])
+        
         self.data = data
         self.login_page = login_page
         self.profile_page = profile_page
@@ -31,23 +28,12 @@ class AccountsPage(QWidget):
         # Title
         self.title = QLabel("Manage Accounts")
         self.title.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.title.setStyleSheet("font-size: 22px; font-weight: bold;")
+        self.title.setStyleSheet(self.styles["title"])  # use style from styles.py
         self.layout.addWidget(self.title)
 
         # Accounts list
         self.account_list = QListWidget()
-        self.account_list.setStyleSheet("""
-            QListWidget {
-                border: 1px solid #aaa;
-                border-radius: 6px;
-                font-size: 16px;
-                padding: 5px;
-            }
-            QListWidget::item:selected {
-                background-color: #0078d7;
-                color: white;
-            }
-        """)
+        self.account_list.setStyleSheet(self.styles["list"])  # centralized list style
         self.layout.addWidget(self.account_list)
 
         # Buttons
@@ -58,6 +44,7 @@ class AccountsPage(QWidget):
 
         for btn in (self.switch_button, self.add_button, self.delete_button, self.back_button):
             btn.setMinimumHeight(36)
+            btn.setStyleSheet(self.styles["button"])  # apply button style
             self.layout.addWidget(btn)
 
         # Connect signals
@@ -86,35 +73,29 @@ class AccountsPage(QWidget):
             QMessageBox.warning(self, "No Selection", "Please select an account first.")
             return
 
-        # Extract username
         username = item.text().replace(" (current)", "")
         self.data.username = username
 
-        # Load stored profile info
         profile = self.data.get_profile(username)
         full_name = profile.get("full_name", username)
 
-        # Update the ProfilePage directly
         if hasattr(self.profile_page, "load_profile"):
             self.profile_page.load_profile(username, full_name)
         else:
             print("⚠️ Warning: ProfilePage has no 'load_profile' method")
 
-        # Optional: update display in the list
         self.refresh_list()
-
         print(f"✅ Switched to account: {username}")
 
-        # Smoothly fade to ProfilePage
-        #removed self.fade_to_page (LOGIN)
+        # Go back to WelcomePage
         parent_stack = self.parent()
         while parent_stack is not None and not hasattr(parent_stack, "setCurrentIndex"):
             parent_stack = parent_stack.parent()
 
         if parent_stack is not None:
             print(f"👋 Returning to WelcomePage for selected account: {username}")
-            parent_stack.selected_username = username  # Pass username for next login
-            parent_stack.setCurrentIndex(0)  # Go to WelcomePage
+            parent_stack.selected_username = username
+            parent_stack.setCurrentIndex(0)
         else:
             print("⚠️ Could not find AppStack — staying in current window.")
 
